@@ -218,6 +218,15 @@ class Roller:
         nonbonded_potential = self._compute_potential(supramolecule)
         return supramolecule, nonbonded_potential
 
+    def _stable_dynamics(self, blob: Blob) -> Blob:
+        """
+
+        """
+
+        # This is effectively a spindry run.
+
+        raise NotImplementedError()
+
     def grow_blob(self, host: Host) -> abc.Iterable[StepResult]:
         """
         Grow blob from beads inside host.
@@ -239,12 +248,29 @@ class Roller:
             beads=(self._bead_type, ),
             position_matrix=np.array(host.get_centroid()),
         )
-        for step in range(self._num_steps):
-            potential = self._compute_potential(host, blob)
+        step_result = StepResult(
+            0,
+            potential=self._compute_potential(host, blob),
+            blob=blob,
+        )
+        for step in range(1, self._num_steps):
+            # Modify Blob.
+            # Add bead to blob.
+            blob = blob.with_new_bead(self._bead_type)
+            # Reduce Blob.
+            blob = blob.reduce_blob()
+
+            # Test new configuration.
+            # Perform stable rigid-body dynamics, optimise config.
+            blob = self._stable_dynamics(blob)
+            # Calculate new potential.
+            new_potential = self._compute_potential(host, blob)
+
+            # Perform pull rigid-body dynamics in N directions.
 
             step_result = StepResult(
                 step,
-                potential=potential,
+                potential=new_potential,
                 blob=blob,
             )
             print(step_result)

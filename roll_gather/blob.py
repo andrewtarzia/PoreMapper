@@ -76,7 +76,65 @@ class Blob:
         for bead in self._beads:
             yield bead
 
-    def _write_xyz_content(self):
+    def with_position_matrix(
+        self,
+        position_matrix: np.ndarray,
+    ) -> Blob:
+        """
+        Return clone Blob with new position matrix.
+
+        Parameters:
+
+            position_matrix:
+               A position matrix of the clone. The shape of the matrix
+               is ``(n, 3)``.
+        """
+
+        clone = self.__class__.__new__(self.__class__)
+        Blob.__init__(
+            self=clone,
+            beads=self._beads,
+            position_matrix=np.array(position_matrix),
+        )
+        return clone
+
+    def with_new_bead(
+        self,
+        bead_type: Bead,
+    ) -> Blob:
+        """
+        Return clone Blob with new bead.
+
+        Parameters:
+
+            beads:
+                Beads that define the blob.
+
+        Returns:
+
+            Blob with new bead.
+
+        """
+
+        # Define new position?? -- within XX distance from a bead.
+
+        raise NotImplementedError()
+        return new_blob
+
+    def reduce_blob(self) -> Blob:
+        """
+        Return clone Blob with only convex hull beads.
+
+        Returns:
+
+            Reduced blob.
+
+        """
+
+        raise NotImplementedError()
+        return new_blob
+
+    def _write_xyz_content(self) -> str:
         """
         Write basic `.xyz` file content of Blob.
 
