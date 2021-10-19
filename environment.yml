@@ -25,4 +25,7 @@ dependencies:
   - wheel=0.37.0=pyhd8ed1ab_1
   - xz=5.2.5=h516909a_1
   - zlib=1.2.11=h36c2ea0_1013
+  - pip:
+    - numpy==1.21.2
+    - scipy==1.7.1
 prefix: /home/atarzia/anaconda3/envs/rg_dev
