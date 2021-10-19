@@ -8,7 +8,10 @@ setuptools.setup(
     description="Cavity size and shape evaluation by bead growth.",
     url="https://github.com/andrewtarzia/roll-and-gather",
     packages=setuptools.find_packages(),
-    install_requires=(),
+    install_requires=(
+        'numpy',
+        'scipy',
+    ),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
