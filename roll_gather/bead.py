@@ -1,53 +1,44 @@
 """
-Atom
+Bead
 ====
 
-#. :class:`.Atom`
+#. :class:`.Bead`
 
-Atom class.
+Bead class.
 
 """
 
 
-class Atom:
+class Bead:
     """
     Atom.
 
     """
 
-    def __init__(self, id, element_string):
+    def __init__(self, sigma: float):
         """
-        Initialize a :class:`Atom` instance.
+        Initialize a :class:`Bead` instance.
 
-        Parameters
-        ----------
-        id : :class:`int`
-            ID to be assigned to atom.
-
-        element_string : :class:`str`
-            Atom element symbol as string.
+        Parameters:
+            sigma:
+                Size (angstrom) of bead.
 
         """
 
-        self._id = id
-        self._element_string = element_string
+        self._sigma = sigma
 
-    def get_id(self):
+    def get_sigma(self) -> float:
         """
-        Get atom ID.
-
-        """
-        return self._id
-
-    def get_element_string(self):
-        """
-        Get atom element symbol.
+        Get atom sigma.
 
         """
-        return self._element_string
+        return self._sigma
 
     def __str__(self):
         return repr(self)
 
     def __repr__(self):
-        return f'{self.get_element_string()}(id={self.get_id()})'
+        return (
+            f'<{self.__class__.__name__}(sigma={self._sigma}) '
+            f'at {id(self)}>'
+        )

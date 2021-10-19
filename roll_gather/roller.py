@@ -1,12 +1,16 @@
 """
-Spinner
-=======
+Roller
+======
 
-#. :class:`.Spinner`
+#. :class:`.Roller`
 
-Generator of host guest conformations using nonbonded interactions.
+Generator of blob guests using nonbonded interactions and growth.
 
 """
+
+from __future__ import annotations
+from collections import abc
+import typing
 
 import numpy as np
 
@@ -15,73 +19,70 @@ from scipy.spatial.distance import cdist
 import random
 
 # from .supramolecule import SupraMolecule
+from .bead import Bead
+from .host import Host
+from .blob import Blob
+from .step_result import StepResult
 from .utilities import rotation_matrix_arbitrary_axis
 
 
-class Spinner:
+class Roller:
     """
-    Generate host-guest conformations by rotating guest.
-
-    A Metroplis MC algorithm is applied to perform rigid
-    translations and rotations of the guest, relative to the host.
+    Grow guest blob.
 
     """
 
     def __init__(
         self,
-        step_size,
-        rotation_step_size,
-        num_conformers,
-        max_attempts=1000,
-        nonbond_epsilon=5,
-        nonbond_sigma=1.2,
-        beta=2,
-        random_seed=1000,
+        step_size: float,
+        rotation_step_size: float,
+        bead_type: Bead,
+        max_beads: int,
+        num_steps: int,
+        nonbond_epsilon: typing.Optional[float] = 5.,
+        beta: typing.Optional[float] = 2.,
+        random_seed: typing.Optional[int] = 1000,
     ):
         """
         Initialize a :class:`Spinner` instance.
 
-        Parameters
-        ----------
-        step_size : :class:`float`
-            The relative size of the step to take during step.
+        Parameters:
 
-        rotation_step_size : :class:`float`
-            The relative size of the rotation to take during step.
+            step_size:
+                The relative size of the step to take during step.
 
-        num_conformers : :class:`int`
-            Number of conformers to extract.
+            rotation_step_size:
+                The relative size of the rotation to take during step.
 
-        max_attempts : :class:`int`
-            Maximum number of MC moves to try to generate conformers.
+            bead_type:
+                Bead to use in Blob.
 
-        nonbond_epsilon : :class:`float`, optional
-            Value of epsilon used in the nonbond potential in MC moves.
-            Determines strength of the nonbond potential.
-            Defaults to 20.
+            max_beads:
+                Maximum number of beads in Blob.
 
-        nonbond_sigma : :class:`float`, optional
-            Value of sigma used in the nonbond potential in MC moves.
-            Defaults to 1.2.
+            num_steps:
+                Number of steps to run growth for.
 
-        beta : :class:`float`, optional
-            Value of beta used in the in MC moves. Beta takes the
-            place of the inverse boltzmann temperature.
-            Defaults to 2.
+            nonbond_epsilon:
+                Value of epsilon used in the nonbond potential in MC
+                moves. Determines strength of the nonbond potential.
 
-        random_seed : :class:`int` or :class:`NoneType`, optional
-            Random seed to use for MC algorithm. Should only be set to
-            ``None`` if system-based random seed is desired. Defaults
-            to 1000.
+            beta:
+                Value of beta used in the in MC moves. Beta takes the
+                place of the inverse boltzmann temperature.
+
+            random_seed:
+                Random seed to use for MC algorithm. Should only be set
+                to ``None`` if system-based random seed is desired.
 
         """
 
         self._step_size = step_size
-        self._num_conformers = num_conformers
         self._rotation_step_size = rotation_step_size
-        self._max_attempts = max_attempts
+        self._bead_type = bead_type
+        self._max_beads = max_beads
+        self._num_steps = num_steps
         self._nonbond_epsilon = nonbond_epsilon
-        self._nonbond_sigma = nonbond_sigma
         self._beta = beta
         if random_seed is None:
             np.random.seed()
@@ -116,7 +117,9 @@ class Spinner:
 
         return nonbonded_potential
 
-    def _compute_potential(self, supramolecule):
+    def _compute_potential(self, host: Host, blob: Blob) -> float:
+        import sys
+        sys.exit('write potential functions.')
         component_position_matrices = (
             i.get_position_matrix()
             for i in supramolecule.get_components()
@@ -215,24 +218,41 @@ class Spinner:
         nonbonded_potential = self._compute_potential(supramolecule)
         return supramolecule, nonbonded_potential
 
-    def get_conformers(self, supramolecule, verbose=False):
+    def grow_blob(self, host: Host) -> abc.Iterable[StepResult]:
         """
-        Get conformers of supramolecule.
+        Grow blob from beads inside host.
 
-        Parameters
-        ----------
-        supramolecule : :class:`.SupraMolecule`
-            The supramolecule to optimize.
+        Parameters:
 
-        verbose : :class:`bool`
-            `True` to print some extra information.
+            host:
+                The supramolecule to optimize.
 
-        Yields
-        ------
-        conformer : :class:`.SupraMolecule`
-            The host-guest supramolecule.
+        Yields:
+
+            step_result:
+                The result of this step.
 
         """
+
+        # Define single bead blob at host centroid.
+        blob = Blob(
+            beads=(self._bead_type, ),
+            position_matrix=np.array(host.get_centroid()),
+        )
+        for step in range(self._num_steps):
+            potential = self._compute_potential(host, blob)
+
+            step_result = StepResult(
+                step,
+                potential=potential,
+                blob=blob,
+            )
+            print(step_result)
+            import sys
+            sys.exit()
+            yield step_result
+        import sys
+        sys.exit()
 
         cid = 0
         nonbonded_potential = self._compute_potential(supramolecule)
@@ -277,24 +297,3 @@ class Spinner:
                 f'{len(cids_passed)} conformers generated in {step} '
                 'steps.'
             )
-
-    def get_final_conformer(self, supramolecule):
-        """
-        Get final conformer of supramolecule.
-
-        Parameters
-        ----------
-        supramolecule : :class:`.SupraMolecule`
-            The supramolecule to optimize.
-
-        Returns
-        -------
-        conformer : :class:`.SupraMolecule`
-            The host-guest supramolecule.
-
-        """
-
-        for conformer in self.get_conformers(supramolecule):
-            continue
-
-        return conformer
