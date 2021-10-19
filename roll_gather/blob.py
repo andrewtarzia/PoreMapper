@@ -8,8 +8,8 @@ SupraMolecule class for optimisation.
 
 """
 
-import networkx as nx
-from .molecule import Molecule
+# import networkx as nx
+# from .molecule import Molecule
 import numpy as np
 
 

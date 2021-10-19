@@ -1,7 +1,8 @@
 import roll_gather as rg
 
 # Read in host from xyz file.
-host = rg.Host.init_from_xyz_file('cc3.xyz')
+host = rg.Host.init_from_xyz_file(path='cc3.xyz')
+print(host)
 
 # Define calculator object.
 calculator = rg.Roller(
@@ -11,6 +12,8 @@ calculator = rg.Roller(
     max_beads=10,
     num_steps=10,
 )
+import sys
+sys.exit()
 
 # Run calculator on host object, analysing output.
 blob_properties = {}

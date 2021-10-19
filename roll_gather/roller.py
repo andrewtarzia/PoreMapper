@@ -14,7 +14,7 @@ from itertools import combinations
 from scipy.spatial.distance import cdist
 import random
 
-from .supramolecule import SupraMolecule
+# from .supramolecule import SupraMolecule
 from .utilities import rotation_matrix_arbitrary_axis
 
 
