@@ -45,10 +45,19 @@ class Blob:
         """
 
         self._beads = tuple(beads)
+        self._sigma = self._beads[0].get_sigma()
         self._position_matrix = np.array(
             position_matrix.T,
             dtype=np.float64,
         )
+
+    def get_sigma(self) -> float:
+        """
+        Return sigma of beads.
+
+        """
+
+        return self._sigma
 
     def get_position_matrix(self) -> np.ndarray:
         """

@@ -91,7 +91,11 @@ class Roller:
             np.random.seed(random_seed)
             random.seed(random_seed)
 
-    def _nonbond_potential(self, distance):
+    def _nonbond_potential(
+        self,
+        distance: np.ndarray,
+        sigma: float,
+    ) -> float:
         """
         Define a Lennard-Jones nonbonded potential.
 
@@ -101,32 +105,26 @@ class Roller:
 
         return (
             self._nonbond_epsilon * (
-                (self._nonbond_sigma/distance) ** 12
-                - (self._nonbond_sigma/distance) ** 6
+                (sigma/distance) ** 12 - (sigma/distance) ** 6
             )
         )
 
-    def _compute_nonbonded_potential(self, position_matrices):
-        # Get all pairwise distances between atoms in host and guests.
+    def _compute_potential(self, host: Host, blob: Blob) -> float:
+        position_matrices = (
+            host.get_position_matrix(),
+            blob.get_position_matrix(),
+        )
         nonbonded_potential = 0
         for pos_mat_pair in combinations(position_matrices, 2):
             pair_dists = cdist(pos_mat_pair[0], pos_mat_pair[1])
             nonbonded_potential += np.sum(
-                self._nonbond_potential(pair_dists.flatten())
+                self._nonbond_potential(
+                    distance=pair_dists.flatten(),
+                    sigma=blob.get_sigma(),
+                )
             )
 
         return nonbonded_potential
-
-    def _compute_potential(self, host: Host, blob: Blob) -> float:
-        import sys
-        sys.exit('write potential functions.')
-        component_position_matrices = (
-            i.get_position_matrix()
-            for i in supramolecule.get_components()
-        )
-        return self._compute_nonbonded_potential(
-            position_matrices=component_position_matrices,
-        )
 
     def _translate_atoms_along_vector(self, mol, vector):
         return mol.with_displacement(vector)
@@ -246,7 +244,7 @@ class Roller:
         # Define single bead blob at host centroid.
         blob = Blob(
             beads=(self._bead_type, ),
-            position_matrix=np.array(host.get_centroid()),
+            position_matrix=np.array((host.get_centroid(), )),
         )
         step_result = StepResult(
             0,
