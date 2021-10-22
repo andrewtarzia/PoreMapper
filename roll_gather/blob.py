@@ -71,6 +71,22 @@ class Blob:
 
         return np.array(self._position_matrix.T)
 
+    def get_centroid(self) -> np.ndarray:
+        """
+        Return the centroid.
+
+        Returns:
+
+            The centroid of atoms specified by `atom_ids`.
+
+        """
+
+        n_beads = len(self._beads)
+        return np.divide(
+            self._position_matrix[:, range(n_beads)].sum(axis=1),
+            n_beads
+        )
+
     def get_num_beads(self) -> int:
         """
         Return the number of beads.
@@ -91,6 +107,25 @@ class Blob:
 
         for bead in self._beads:
             yield bead
+
+    def with_displacement(self, displacement: np.ndarray) -> Blob:
+        """
+        Return a displaced clone Blob.
+
+        Parameters:
+
+            displacement:
+                The displacement vector to be applied.
+
+        """
+
+        new_position_matrix = (
+            self._position_matrix.T + displacement
+        )
+        return Blob(
+            beads=self._beads,
+            position_matrix=np.array(new_position_matrix),
+        )
 
     def with_position_matrix(
         self,
@@ -134,16 +169,11 @@ class Blob:
 
         pos_mat = self.get_position_matrix()
 
-        # Pick existing bead.
-        bead_anchor_id = random.choice(
-            [i.get_id() for i in self.get_beads()]
-        )
-
         # Pick a direction randomly from a sphere.
         vec = sample_spherical(1)
         # Multiply by host-guest distance /2.
         vec = vec * (min_host_guest_distance / 2)
-        placement_vec = pos_mat[bead_anchor_id] + vec.T
+        placement_vec = self.get_centroid() + vec.T
 
         # Place bead.
         new_beads = self._beads + (Bead(
@@ -173,8 +203,8 @@ class Blob:
 
         """
 
-        raise NotImplementedError()
-        return new_blob
+        print('reduction not implemented yet.')
+        return self
 
     def _write_xyz_content(self) -> str:
         """
