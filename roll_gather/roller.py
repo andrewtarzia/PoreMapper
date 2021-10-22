@@ -14,7 +14,6 @@ import typing
 
 import numpy as np
 
-from itertools import combinations
 from scipy.spatial.distance import cdist
 import random
 
@@ -37,8 +36,10 @@ class Roller:
         step_size: float,
         rotation_step_size: float,
         bead_sigma: float,
+        max_size_modifier: float,
         max_beads: int,
         num_steps: int,
+        num_dynamics_steps: int,
         nonbond_epsilon: typing.Optional[float] = 5.,
         beta: typing.Optional[float] = 2.,
         random_seed: typing.Optional[int] = 1000,
@@ -57,11 +58,17 @@ class Roller:
             bead_sigma:
                 Bead sigma to use in Blob.
 
+            max_size_modifier:
+                Maximum percent to modify blob by.
+
             max_beads:
                 Maximum number of beads in Blob.
 
             num_steps:
                 Number of steps to run growth for.
+
+            num_dynamics_steps:
+                Number of steps for each dynamics run.
 
             nonbond_epsilon:
                 Value of epsilon used in the nonbond potential in MC
@@ -80,8 +87,10 @@ class Roller:
         self._step_size = step_size
         self._rotation_step_size = rotation_step_size
         self._bead_sigma = bead_sigma
+        self._max_size_modifier = max_size_modifier
         self._max_beads = max_beads
         self._num_steps = num_steps
+        self._num_dynamics_steps = num_dynamics_steps
         self._nonbond_epsilon = nonbond_epsilon
         self._beta = beta
         if random_seed is None:
@@ -120,17 +129,42 @@ class Roller:
         pair_dists = self._get_distances(host, blob)
         nonbonded_potential += np.sum(
             self._nonbond_potential(
-                distance=pair_dists.flatten(),
+                distance=pair_dists,
             )
         )
 
         return nonbonded_potential
 
-    def _translate_atoms_along_vector(self, mol, vector):
-        return mol.with_displacement(vector)
+    def _translate_beads_along_vector(
+        self,
+        blob: Blob,
+        vector: np.ndarray,
+    ) -> Blob:
+        return blob.with_displacement(vector)
 
-    def _rotate_atoms_by_angle(self, mol, angle, axis, origin):
-        new_position_matrix = mol.get_position_matrix()
+    def _modify_blob_extent(self, blob: Blob, percent: float) -> Blob:
+        pos_mat = blob.get_position_matrix()
+        centroid = blob.get_centroid()
+        new_position_matrix = []
+        for pos in pos_mat:
+            dist_to_centroid = pos-centroid
+            modified_pos = centroid+(
+                dist_to_centroid*((100-percent)/100)
+            )
+            new_position_matrix.append(modified_pos)
+
+        return blob.with_position_matrix(
+            np.array(new_position_matrix)
+        )
+
+    def _rotate_beads_by_angle(
+        self,
+        blob: Blob,
+        angle: float,
+        axis: np.ndarray,
+        origin: np.ndarray,
+    ) -> Blob:
+        new_position_matrix = blob.get_position_matrix()
         # Set the origin of the rotation to "origin".
         new_position_matrix = new_position_matrix - origin
         # Perform rotation.
@@ -141,8 +175,7 @@ class Roller:
         # Return the centroid of the molecule to the original position.
         new_position_matrix = new_position_matrix + origin
 
-        mol = mol.with_position_matrix(new_position_matrix)
-        return mol
+        return blob.with_position_matrix(new_position_matrix)
 
     def _test_move(self, curr_pot, new_pot):
 
@@ -157,40 +190,28 @@ class Roller:
             else:
                 return False
 
-    def _run_step(self, supramolecule):
+    def _run_step(self, host, blob):
 
-        component_list = list(supramolecule.get_components())
-        component_sizes = {
-            i: mol.get_num_atoms()
-            for i, mol in enumerate(component_list)
-        }
-        max_size = max(component_sizes.values())
-        # Select a guest randomly to move and reorient.
-        # Do not move or rotate largest component if same size.
-        if len(set(component_sizes.values())) > 1:
-            targ_comp_id = random.choice([
-                i for i in range(len(component_list))
-                if component_sizes[i] != max_size
-            ])
-        else:
-            targ_comp_id = random.choice([
-                i for i in range(len(component_list))
-            ])
+        # # Perform translation.
+        # # Random number from -1 to 1 for multiplying translation.
+        # rand = (random.random() - 0.5) * 2
+        # # Random translation direction.
+        # rand_vector = np.random.rand(3)
+        # rand_vector = rand_vector / np.linalg.norm(rand_vector)
+        # # Perform translation.
+        # translation_vector = rand_vector * self._step_size * rand
+        # blob = self._translate_beads_along_vector(
+        #     blob=blob,
+        #     vector=translation_vector,
+        # )
 
-        targ_comp = component_list[targ_comp_id]
-
-        # Random number from -1 to 1 for multiplying translation.
+        # Random number from -1 to 1 for multiplying percent.
         rand = (random.random() - 0.5) * 2
-
-        # Random translation direction.
-        rand_vector = np.random.rand(3)
-        rand_vector = rand_vector / np.linalg.norm(rand_vector)
-
-        # Perform translation.
-        translation_vector = rand_vector * self._step_size * rand
-        targ_comp = self._translate_atoms_along_vector(
-            mol=targ_comp,
-            vector=translation_vector,
+        # Perform extent modification.
+        percent = self._max_size_modifier * rand
+        blob = self._modify_blob_extent(
+            blob=blob,
+            percent=percent,
         )
 
         # Define a random rotation of the guest.
@@ -198,32 +219,44 @@ class Roller:
         rand = (random.random() - 0.5) * 2
         rotation_angle = self._rotation_step_size * rand
         rand_axis = np.random.rand(3)
+        rand_vector = np.random.rand(3)
         rand_axis = rand_axis / np.linalg.norm(rand_vector)
 
         # Perform rotation.
-        targ_comp = self._rotate_atoms_by_angle(
-            mol=targ_comp,
+        blob = self._rotate_beads_by_angle(
+            blob=blob,
             angle=rotation_angle,
             axis=rand_axis,
-            origin=targ_comp.get_centroid(),
+            origin=blob.get_centroid(),
         )
 
-        component_list[targ_comp_id] = targ_comp
-        supramolecule = SupraMolecule.init_from_components(
-            components=component_list,
-        )
+        potential = self._compute_potential(host, blob)
+        return blob, potential
 
-        nonbonded_potential = self._compute_potential(supramolecule)
-        return supramolecule, nonbonded_potential
+    def _stable_dynamics(
+        self,
+        host: Host,
+        blob: Blob,
+        potential: float
+    ) -> tuple[Blob, float]:
+        """
+        Allow the blob to modify in position, size and orientation.
 
-    def _stable_dynamics(self, blob: Blob) -> Blob:
         """
 
-        """
+        # This is effectively a survey of rotations and
+        # contractions/expansions only.
+        for step in range(self._num_dynamics_steps):
+            new_blob, new_potential = self._run_step(host, blob)
+            passed = self._test_move(
+                curr_pot=potential,
+                new_pot=new_potential
+            )
+            if passed:
+                blob = new_blob
+                potential = new_potential
 
-        # This is effectively a spindry run.
-
-        raise NotImplementedError()
+        return (blob, potential)
 
     def grow_blob(self, host: Host) -> abc.Iterable[StepResult]:
         """
@@ -232,7 +265,7 @@ class Roller:
         Parameters:
 
             host:
-                The supramolecule to optimize.
+                The host to analyse.
 
         Yields:
 
@@ -246,6 +279,7 @@ class Roller:
             beads=(Bead(id=0, sigma=self._bead_sigma), ),
             position_matrix=np.array((host.get_centroid(), )),
         )
+        potential = self._compute_potential(host, blob)
         step_result = StepResult(
             0,
             potential=self._compute_potential(host, blob),
@@ -258,76 +292,30 @@ class Roller:
             min_host_guest_distance = min(self._get_distances(
                 host=host,
                 blob=blob,
-            ))
-            print(min_host_guest_distance)
+            ).flatten())
             blob = blob.with_new_bead(
                 min_host_guest_distance=min_host_guest_distance,
             )
-            print(blob)
             blob.write_xyz_file('temp.xyz')
             # Reduce Blob.
             blob = blob.reduce_blob()
 
             # Test new configuration.
             # Perform stable rigid-body dynamics, optimise config.
-            blob = self._stable_dynamics(blob)
-            # Calculate new potential.
-            new_potential = self._compute_potential(host, blob)
+            blob, potential = self._stable_dynamics(
+                host=host,
+                blob=blob,
+                potential=potential,
+            )
 
             # Perform pull rigid-body dynamics in N directions.
 
             step_result = StepResult(
                 step,
-                potential=new_potential,
+                potential=potential,
                 blob=blob,
             )
             print(step_result)
-            import sys
-            sys.exit()
             yield step_result
         import sys
         sys.exit()
-
-        cid = 0
-        nonbonded_potential = self._compute_potential(supramolecule)
-
-        yield SupraMolecule(
-            atoms=supramolecule.get_atoms(),
-            bonds=supramolecule.get_bonds(),
-            position_matrix=supramolecule.get_position_matrix(),
-            cid=cid,
-            potential=nonbonded_potential,
-        )
-        cids_passed = [cid]
-        for step in range(1, self._max_attempts):
-            n_supramolecule, n_nonbonded_potential = self._run_step(
-                supramolecule=supramolecule,
-            )
-            passed = self._test_move(
-                curr_pot=nonbonded_potential,
-                new_pot=n_nonbonded_potential
-            )
-            if passed:
-                cid += 1
-                cids_passed.append(cid)
-                nonbonded_potential = n_nonbonded_potential
-                supramolecule = SupraMolecule(
-                    atoms=supramolecule.get_atoms(),
-                    bonds=supramolecule.get_bonds(),
-                    position_matrix=(
-                        n_supramolecule.get_position_matrix()
-                    ),
-                    cid=cid,
-                    potential=nonbonded_potential,
-                )
-
-                yield supramolecule
-
-            if len(cids_passed) == self._num_conformers:
-                break
-
-        if verbose:
-            print(
-                f'{len(cids_passed)} conformers generated in {step} '
-                'steps.'
-            )
