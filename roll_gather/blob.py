@@ -11,12 +11,11 @@ Blob class for optimisation.
 from __future__ import annotations
 from collections import abc
 
-
-# import networkx as nx
-# from .molecule import Molecule
+import random
 import numpy as np
 
 from .bead import Bead
+from .utilities import sample_spherical
 
 
 class Blob:
@@ -72,6 +71,14 @@ class Blob:
 
         return np.array(self._position_matrix.T)
 
+    def get_num_beads(self) -> int:
+        """
+        Return the number of beads.
+
+        """
+
+        return len(self._beads)
+
     def get_beads(self) -> abc.Iterable[Bead]:
         """
         Yield the beads in the molecule, ordered as input.
@@ -95,8 +102,8 @@ class Blob:
         Parameters:
 
             position_matrix:
-               A position matrix of the clone. The shape of the matrix
-               is ``(n, 3)``.
+               A position matrix of the clone. The shape of the
+               matrix is ``(n, 3)``.
         """
 
         clone = self.__class__.__new__(self.__class__)
@@ -109,15 +116,15 @@ class Blob:
 
     def with_new_bead(
         self,
-        bead_type: Bead,
+        min_host_guest_distance: float,
     ) -> Blob:
         """
         Return clone Blob with new bead.
 
         Parameters:
 
-            beads:
-                Beads that define the blob.
+            min_host_guest_distance:
+                Minimum distance between blob and host.
 
         Returns:
 
@@ -125,9 +132,35 @@ class Blob:
 
         """
 
-        # Define new position?? -- within XX distance from a bead.
+        pos_mat = self.get_position_matrix()
 
-        raise NotImplementedError()
+        # Pick existing bead.
+        bead_anchor_id = random.choice(
+            [i.get_id() for i in self.get_beads()]
+        )
+
+        # Pick a direction randomly from a sphere.
+        vec = sample_spherical(1)
+        # Multiply by host-guest distance /2.
+        vec = vec * (min_host_guest_distance / 2)
+        placement_vec = pos_mat[bead_anchor_id] + vec.T
+
+        # Place bead.
+        new_beads = self._beads + (Bead(
+            id=self._beads[-1].get_id()+1,
+            sigma=self._sigma,
+        ), )
+        new_position_matrix = np.vstack([
+            pos_mat, placement_vec
+        ])
+
+        new_blob = self.__class__.__new__(self.__class__)
+        Blob.__init__(
+            self=new_blob,
+            beads=new_beads,
+            position_matrix=np.array(new_position_matrix),
+        )
+
         return new_blob
 
     def reduce_blob(self) -> Blob:
@@ -150,15 +183,26 @@ class Blob:
         """
         coords = self.get_position_matrix()
         content = [0]
-        for i, atom in enumerate(self.get_atoms(), 1):
-            x, y, z = (i for i in coords[atom.get_id()])
+        for i, bead in enumerate(self.get_beads(), 1):
+            x, y, z = (i for i in coords[bead.get_id()])
             content.append(
                 f'B {x:f} {y:f} {z:f}\n'
             )
         # Set first line to the atom_count.
-        content[0] = f'{i}\ncid:{self._cid}, pot: {self._potential}\n'
+        content[0] = f'{i}\nBlob!\n'
 
         return content
+
+    def write_xyz_file(self, path) -> None:
+        """
+        Write blob to path.
+
+        """
+
+        content = self._write_xyz_content()
+
+        with open(path, 'w') as f:
+            f.write(''.join(content))
 
     def __str__(self):
         return repr(self)

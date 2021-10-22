@@ -36,7 +36,7 @@ class Roller:
         self,
         step_size: float,
         rotation_step_size: float,
-        bead_type: Bead,
+        bead_sigma: float,
         max_beads: int,
         num_steps: int,
         nonbond_epsilon: typing.Optional[float] = 5.,
@@ -54,8 +54,8 @@ class Roller:
             rotation_step_size:
                 The relative size of the rotation to take during step.
 
-            bead_type:
-                Bead to use in Blob.
+            bead_sigma:
+                Bead sigma to use in Blob.
 
             max_beads:
                 Maximum number of beads in Blob.
@@ -79,7 +79,7 @@ class Roller:
 
         self._step_size = step_size
         self._rotation_step_size = rotation_step_size
-        self._bead_type = bead_type
+        self._bead_sigma = bead_sigma
         self._max_beads = max_beads
         self._num_steps = num_steps
         self._nonbond_epsilon = nonbond_epsilon
@@ -94,7 +94,6 @@ class Roller:
     def _nonbond_potential(
         self,
         distance: np.ndarray,
-        sigma: float,
     ) -> float:
         """
         Define a Lennard-Jones nonbonded potential.
@@ -105,24 +104,25 @@ class Roller:
 
         return (
             self._nonbond_epsilon * (
-                (sigma/distance) ** 12 - (sigma/distance) ** 6
+                (self._bead_sigma/distance) ** 12
+                - (self._bead_sigma/distance) ** 6
             )
         )
 
-    def _compute_potential(self, host: Host, blob: Blob) -> float:
-        position_matrices = (
+    def _get_distances(self, host: Host, blob: Blob) -> np.ndarray:
+        return cdist(
             host.get_position_matrix(),
             blob.get_position_matrix(),
         )
+
+    def _compute_potential(self, host: Host, blob: Blob) -> float:
         nonbonded_potential = 0
-        for pos_mat_pair in combinations(position_matrices, 2):
-            pair_dists = cdist(pos_mat_pair[0], pos_mat_pair[1])
-            nonbonded_potential += np.sum(
-                self._nonbond_potential(
-                    distance=pair_dists.flatten(),
-                    sigma=blob.get_sigma(),
-                )
+        pair_dists = self._get_distances(host, blob)
+        nonbonded_potential += np.sum(
+            self._nonbond_potential(
+                distance=pair_dists.flatten(),
             )
+        )
 
         return nonbonded_potential
 
@@ -243,7 +243,7 @@ class Roller:
 
         # Define single bead blob at host centroid.
         blob = Blob(
-            beads=(self._bead_type, ),
+            beads=(Bead(id=0, sigma=self._bead_sigma), ),
             position_matrix=np.array((host.get_centroid(), )),
         )
         step_result = StepResult(
@@ -251,10 +251,20 @@ class Roller:
             potential=self._compute_potential(host, blob),
             blob=blob,
         )
+        print(step_result)
         for step in range(1, self._num_steps):
             # Modify Blob.
             # Add bead to blob.
-            blob = blob.with_new_bead(self._bead_type)
+            min_host_guest_distance = min(self._get_distances(
+                host=host,
+                blob=blob,
+            ))
+            print(min_host_guest_distance)
+            blob = blob.with_new_bead(
+                min_host_guest_distance=min_host_guest_distance,
+            )
+            print(blob)
+            blob.write_xyz_file('temp.xyz')
             # Reduce Blob.
             blob = blob.reduce_blob()
 

@@ -8,7 +8,7 @@ print(host)
 calculator = rg.Roller(
     step_size=0.5,
     rotation_step_size=5,
-    bead_type=rg.Bead(sigma=1.2),
+    bead_sigma=1.2,
     max_beads=10,
     num_steps=10,
     nonbond_epsilon=5,
