@@ -1,4 +1,8 @@
+import os
 import roll_gather as rg
+
+if not os.path.exists('min_example_output'):
+    os.mkdir('min_example_output')
 
 # Read in host from xyz file.
 host = rg.Host.init_from_xyz_file(path='cc3.xyz')
@@ -6,12 +10,14 @@ print(host)
 
 # Define calculator object.
 calculator = rg.Roller(
-    step_size=0.5,
+    step_size=2.,
     rotation_step_size=5,
     bead_sigma=1.2,
-    max_beads=10,
-    num_steps=10,
-    nonbond_epsilon=5,
+    max_size_modifier=15,
+    max_beads=30,
+    num_steps=100,
+    num_dynamics_steps=10,
+    nonbond_epsilon=100,
     beta=2,
     random_seed=1000,
 )
@@ -29,6 +35,7 @@ for step_result in calculator.grow_blob(host=host):
     blob.write_xyz_file(
         f'min_example_output/blob_{step_result.step}.xyz'
     )
+    continue
     blob_properties[step_result.step] = blob.get_properties()
 
 rg.write_blob_properties_over_time(
