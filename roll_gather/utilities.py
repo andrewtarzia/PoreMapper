@@ -72,3 +72,17 @@ def write_blob_properties_over_time(properties_dict, output_file):
         f.write('HEADINGS FROM KEYS')
         for step in properties_dict:
             f.write('')
+
+
+def sample_spherical(npoints, ndim=3):
+    """
+    Sample spherical coordinates.
+
+    From:
+    https://stackoverflow.com/questions/33976911/generate-a-random-sample-of-points-distributed-on-the-surface-of-a-unit-sphere
+
+    """
+    vec = np.random.randn(ndim, npoints)
+    vec /= np.linalg.norm(vec, axis=0)
+
+    return vec
