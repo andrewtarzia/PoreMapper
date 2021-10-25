@@ -13,12 +13,10 @@ from collections import abc
 import typing
 
 import numpy as np
-
+from copy import deepcopy
 from scipy.spatial.distance import cdist
 import random
 
-# from .supramolecule import SupraMolecule
-from .bead import Bead
 from .host import Host
 from .blob import Blob
 from .step_result import StepResult
@@ -38,8 +36,8 @@ class Roller:
         bead_sigma: float,
         max_size_modifier: float,
         max_beads: int,
-        num_steps: int,
         num_dynamics_steps: int,
+        bond_epsilon: typing.Optional[float] = 1.,
         nonbond_epsilon: typing.Optional[float] = 5.,
         beta: typing.Optional[float] = 2.,
         random_seed: typing.Optional[int] = 1000,
@@ -70,6 +68,10 @@ class Roller:
             num_dynamics_steps:
                 Number of steps for each dynamics run.
 
+            bond_epsilon:
+                Value of epsilon used in the bond potential between
+                beads.
+
             nonbond_epsilon:
                 Value of epsilon used in the nonbond potential in MC
                 moves. Determines strength of the nonbond potential.
@@ -89,8 +91,8 @@ class Roller:
         self._bead_sigma = bead_sigma
         self._max_size_modifier = max_size_modifier
         self._max_beads = max_beads
-        self._num_steps = num_steps
         self._num_dynamics_steps = num_dynamics_steps
+        self._bond_epsilon = bond_epsilon
         self._nonbond_epsilon = nonbond_epsilon
         self._beta = beta
         if random_seed is None:
@@ -111,12 +113,14 @@ class Roller:
 
         """
 
-        return (
-            self._nonbond_epsilon * (
-                (self._bead_sigma/distance) ** 12
-                - (self._bead_sigma/distance) ** 6
+        if min(distance) < self._bead_sigma:
+            return [10000]
+        else:
+            return (
+                self._nonbond_epsilon * (
+                    - (self._bead_sigma/distance) ** 6
+                )
             )
-        )
 
     def _get_distances(self, host: Host, blob: Blob) -> np.ndarray:
         return cdist(
@@ -125,33 +129,54 @@ class Roller:
         )
 
     def _compute_potential(self, host: Host, blob: Blob) -> float:
-        nonbonded_potential = 0
-        pair_dists = self._get_distances(host, blob)
-        nonbonded_potential += np.sum(
+        pair_dists = self._get_distances(host, blob).flatten()
+        return np.sum(
             self._nonbond_potential(
                 distance=pair_dists,
             )
         )
 
-        return nonbonded_potential
-
     def _translate_beads_along_vector(
         self,
         blob: Blob,
         vector: np.ndarray,
+        bead_id: typing.Optional[int] = None,
     ) -> Blob:
-        return blob.with_displacement(vector)
+        if bead_id is None:
+            return blob.with_displacement(vector)
+        else:
+            new_position_matrix = deepcopy(blob.get_position_matrix())
+            for bead in blob.get_beads():
+                if bead.get_id() != bead_id:
+                    continue
+                pos = blob.get_position_matrix()[bead.get_id()]
+                new_position_matrix[bead.get_id()] = pos - vector
 
-    def _modify_blob_extent(self, blob: Blob, percent: float) -> Blob:
-        pos_mat = blob.get_position_matrix()
+            return blob.with_position_matrix(new_position_matrix)
+
+    def _modify_blob_extent(
+        self,
+        blob: Blob,
+        percent: float,
+        bead_ids: typing.Optional[typing.Iterable[int]] = None,
+    ) -> Blob:
+
+        if bead_ids is None:
+            bead_ids = [i.get_id() for i in blob.get_beads()]
+        else:
+            bead_ids = bead_ids
+
+        new_position_matrix = deepcopy(blob.get_position_matrix())
         centroid = blob.get_centroid()
-        new_position_matrix = []
-        for pos in pos_mat:
+        for bead in blob.get_beads():
+            if bead.get_id() not in bead_ids:
+                continue
+            pos = blob.get_position_matrix()[bead.get_id()]
             dist_to_centroid = pos-centroid
             modified_pos = centroid+(
                 dist_to_centroid*((100-percent)/100)
             )
-            new_position_matrix.append(modified_pos)
+            new_position_matrix[bead.get_id()] = modified_pos
 
         return blob.with_position_matrix(
             np.array(new_position_matrix)
@@ -192,43 +217,91 @@ class Roller:
 
     def _run_step(self, host, blob):
 
-        # # Perform translation.
-        # # Random number from -1 to 1 for multiplying translation.
-        # rand = (random.random() - 0.5) * 2
-        # # Random translation direction.
-        # rand_vector = np.random.rand(3)
-        # rand_vector = rand_vector / np.linalg.norm(rand_vector)
-        # # Perform translation.
-        # translation_vector = rand_vector * self._step_size * rand
-        # blob = self._translate_beads_along_vector(
-        #     blob=blob,
-        #     vector=translation_vector,
-        # )
-
-        # Random number from -1 to 1 for multiplying percent.
-        rand = (random.random() - 0.5) * 2
-        # Perform extent modification.
-        percent = self._max_size_modifier * rand
-        blob = self._modify_blob_extent(
-            blob=blob,
-            percent=percent,
+        # Choose between moves.
+        _moves = (
+            # 'whole_body_translation',
+            'expand-contract',
+            'expand-contract-some',
+            'bead_translation',
+            'whole_body_rotation',
         )
+        move = random.choice(_moves)
 
-        # Define a random rotation of the guest.
-        # Random number from -1 to 1 for multiplying rotation.
-        rand = (random.random() - 0.5) * 2
-        rotation_angle = self._rotation_step_size * rand
-        rand_axis = np.random.rand(3)
-        rand_vector = np.random.rand(3)
-        rand_axis = rand_axis / np.linalg.norm(rand_vector)
+        if move == 'whole_body_translation':
+            # Perform translation.
+            # Random number from -1 to 1 for multiplying translation.
+            rand = (random.random() - 0.5) * 2
+            # Random translation direction.
+            rand_vector = np.random.rand(3)
+            rand_vector = rand_vector / np.linalg.norm(rand_vector)
+            # Perform translation.
+            translation_vector = rand_vector * self._step_size * rand
+            blob = self._translate_beads_along_vector(
+                blob=blob,
+                vector=translation_vector,
+            )
 
-        # Perform rotation.
-        blob = self._rotate_beads_by_angle(
-            blob=blob,
-            angle=rotation_angle,
-            axis=rand_axis,
-            origin=blob.get_centroid(),
-        )
+        elif move == 'expand-contract-some':
+            # Select some beads.
+            selec_bead_ids = random.sample(
+                [i.get_id() for i in blob.get_beads()],
+                5
+            )
+            # Random number from -1 to 1 for multiplying percent.
+            rand = (random.random() - 0.5) * 2
+            # Perform extent modification.
+            percent = -self._max_size_modifier * rand
+            blob = self._modify_blob_extent(
+                blob=blob,
+                percent=percent,
+                bead_ids=selec_bead_ids,
+            )
+
+        elif move == 'expand-contract':
+            # Random number from -1 to 1 for multiplying percent.
+            rand = (random.random() - 0.5) * 2
+            # Perform extent modification.
+            percent = -self._max_size_modifier * rand
+            blob = self._modify_blob_extent(
+                blob=blob,
+                percent=percent,
+            )
+
+        elif move == 'bead_translation':
+            # Perform translations of individual beads in blob.
+            # Select bead.
+            selec_bead_id = random.choice(
+                [i.get_id() for i in blob.get_beads()]
+            )
+            # Random number from -1 to 1 for multiplying translation.
+            rand = (random.random() - 0.5) * 2
+            # # Random translation direction.
+            rand_vector = np.random.rand(3)
+            rand_vector = rand_vector / np.linalg.norm(rand_vector)
+            bead_translation_vector = rand_vector * self._step_size * rand
+            # Perform translation.
+            blob = self._translate_beads_along_vector(
+                blob=blob,
+                vector=bead_translation_vector,
+                bead_id=selec_bead_id,
+            )
+
+        elif move == 'whole_body_rotation':
+            # Define a random rotation of the guest.
+            # Random number from -1 to 1 for multiplying rotation.
+            rand = (random.random() - 0.5) * 2
+            rotation_angle = self._rotation_step_size * rand
+            rand_axis = np.random.rand(3)
+            rand_vector = np.random.rand(3)
+            rand_axis = rand_axis / np.linalg.norm(rand_vector)
+
+            # Perform rotation.
+            blob = self._rotate_beads_by_angle(
+                blob=blob,
+                angle=rotation_angle,
+                axis=rand_axis,
+                origin=blob.get_centroid(),
+            )
 
         potential = self._compute_potential(host, blob)
         return blob, potential
@@ -246,21 +319,28 @@ class Roller:
 
         # This is effectively a survey of rotations and
         # contractions/expansions only.
+        count = 0
+        total = 0
         for step in range(self._num_dynamics_steps):
             new_blob, new_potential = self._run_step(host, blob)
             passed = self._test_move(
                 curr_pot=potential,
                 new_pot=new_potential
             )
+            new_blob.write_xyz_file(f'min_example_output/temp_{step}.xyz')
+            total += 1
             if passed:
                 blob = new_blob
                 potential = new_potential
+                count += 1
+
+        print(count/total)
 
         return (blob, potential)
 
-    def grow_blob(self, host: Host) -> abc.Iterable[StepResult]:
+    def mould_blob(self, host: Host) -> abc.Iterable[StepResult]:
         """
-        Grow blob from beads inside host.
+        Mould blob from beads inside host.
 
         Parameters:
 
@@ -274,48 +354,57 @@ class Roller:
 
         """
 
-        # Define single bead blob at host centroid.
-        blob = Blob(
-            beads=(Bead(id=0, sigma=self._bead_sigma), ),
-            position_matrix=np.array((host.get_centroid(), )),
+        # for num_beads in range(1, self._max_beads):
+        # Define an idealised blob based on num_beads.
+        blob = Blob.init_from_idealised_geometry(
+            num_beads=self._max_beads,
+            bead_sigma=self._bead_sigma,
         )
-        potential = self._compute_potential(host, blob)
-        step_result = StepResult(
-            0,
-            potential=self._compute_potential(host, blob),
-            blob=blob,
-        )
-        print(step_result)
-        for step in range(1, self._num_steps):
-            # Modify Blob.
-            # Add bead to blob.
-            min_host_guest_distance = min(self._get_distances(
-                host=host,
-                blob=blob,
-            ).flatten())
-            blob = blob.with_new_bead(
-                min_host_guest_distance=min_host_guest_distance,
-            )
-            blob.write_xyz_file('temp.xyz')
-            # Reduce Blob.
-            blob = blob.reduce_blob()
+        blob = blob.with_centroid(host.get_centroid())
 
-            # Test new configuration.
-            # Perform stable rigid-body dynamics, optimise config.
-            blob, potential = self._stable_dynamics(
-                host=host,
-                blob=blob,
-                potential=potential,
+        # # Modify Blob.
+        # # Add bead to blob.
+        # min_host_guest_distance = min(self._get_distances(
+        #     host=host,
+        #     blob=blob,
+        # ).flatten())
+        # blob = blob.with_new_bead(
+        #     min_host_guest_distance=min_host_guest_distance,
+        # )
+
+        # # Reduce Blob.
+        # blob = blob.reduce_blob()
+        potential = self._compute_potential(host, blob)
+
+        # Test new configuration.
+        # Perform stable rigid-body dynamics, optimise config.
+        # blob, potential = self._stable_dynamics(
+        #     host=host,
+        #     blob=blob,
+        #     potential=potential,
+        # )
+        count = 0
+        total = 0
+        for step in range(self._num_dynamics_steps):
+            new_blob, new_potential = self._run_step(host, blob)
+            passed = self._test_move(
+                curr_pot=potential,
+                new_pot=new_potential
             )
+            total += 1
+            if passed:
+                blob = new_blob
+                potential = new_potential
+                count += 1
 
             # Perform pull rigid-body dynamics in N directions.
 
             step_result = StepResult(
-                step,
+                step=step,
                 potential=potential,
                 blob=blob,
             )
-            print(step_result)
             yield step_result
+        print(count/total)
         import sys
         sys.exit()
