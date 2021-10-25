@@ -19,6 +19,7 @@ class StepResult:
     Data of one step of calculation.
 
     """
+
     step: int
     potential: float
     blob: Blob
