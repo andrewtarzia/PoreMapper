@@ -62,18 +62,6 @@ def rotation_matrix_arbitrary_axis(angle, axis):
     ])).as_matrix()
 
 
-def write_blob_properties_over_time(properties_dict, output_file):
-    """
-
-
-    """
-
-    with open(output_file, 'r') as f:
-        f.write('HEADINGS FROM KEYS')
-        for step in properties_dict:
-            f.write('')
-
-
 def sample_spherical(npoints, ndim=3):
     """
     Sample spherical coordinates.
