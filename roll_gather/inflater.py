@@ -152,11 +152,10 @@ class Inflater:
         )
         blob = blob.with_centroid(host.get_centroid())
 
-        movable_beads = set([i.get_id() for i in blob.get_beads()])
+        movable_bead_ids = set([i.get_id() for i in blob.get_beads()])
         for step in range(self._num_dynamics_steps):
-            num_movable_beads = 0
             for bead in blob.get_beads():
-                if bead.get_id() not in movable_beads:
+                if bead.get_id() not in movable_bead_ids:
                     continue
                 centroid = blob.get_centroid()
                 pos_mat = blob.get_position_matrix()
@@ -175,26 +174,27 @@ class Inflater:
                     host=host,
                     blob=new_blob,
                 ).flatten())
+                # If, do not update blob.
                 if min_host_guest_distance < self._bead_sigma:
-                    steric_clash = True
-                else:
-                    steric_clash = False
-
-                # If not, update blob.
-                if steric_clash:
-                    movable_beads.remove(bead.get_id())
+                    movable_bead_ids.remove(bead.get_id())
                 else:
                     blob = blob.with_position_matrix(
                         position_matrix=new_blob.get_position_matrix(),
                     )
-                    num_movable_beads += 1
 
+            num_movable_beads = len(movable_bead_ids)
+            if num_movable_beads == blob.get_num_beads():
+                nonmovable_bead_ids = [
+                    i.get_id() for i in blob.get_beads()
+                ]
+            else:
+                nonmovable_bead_ids = [
+                    i.get_id() for i in blob.get_beads()
+                    if i.get_id() not in movable_bead_ids
+                ]
             pore = Pore(
                 blob=blob,
-                nonmovable_bead_ids=[
-                    i.get_id() for i in blob.get_beads()
-                    if i not in movable_beads
-                ],
+                nonmovable_bead_ids=nonmovable_bead_ids,
             )
             step_result = InflationStepResult(
                 step=step,
