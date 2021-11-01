@@ -26,6 +26,13 @@ dependencies:
   - xz=5.2.5=h516909a_1
   - zlib=1.2.11=h36c2ea0_1013
   - pip:
+    - cycler==0.11.0
+    - kiwisolver==1.3.2
+    - matplotlib==3.4.3
     - numpy==1.21.2
+    - pillow==8.4.0
+    - pyparsing==3.0.4
+    - python-dateutil==2.8.2
     - scipy==1.7.1
+    - six==1.16.0
 prefix: /home/atarzia/anaconda3/envs/rg_dev
