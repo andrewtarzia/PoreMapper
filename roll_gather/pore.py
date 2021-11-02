@@ -155,17 +155,34 @@ class Pore:
         with open(path, 'w') as f:
             f.write(''.join(content))
 
-    def get_maximum_diameter(self) -> float:
+
+    def get_mean_distance_to_com(self) -> float:
         """
-        Return the maximum diameter.
+        Return the mean distance to COM.
 
         This method does not account for the van der Waals radius of
         atoms.
 
         """
 
-        coords = self._position_matrix
-        return float(euclidean(coords.min(axis=1), coords.max(axis=1)))
+        return np.mean([
+            euclidean(i, self.get_centroid())
+            for i in self._position_matrix.T
+        ])
+
+    def get_maximum_distance_to_com(self) -> float:
+        """
+        Return the maximum distance to COM.
+
+        This method does not account for the van der Waals radius of
+        atoms.
+
+        """
+
+        return max((
+            euclidean(i, self.get_centroid())
+            for i in self._position_matrix.T
+        ))
 
     def get_properties(self, potential: float) -> PoreProperties:
 
