@@ -15,7 +15,6 @@ import typing
 import numpy as np
 from copy import deepcopy
 from scipy.spatial.distance import cdist
-import random
 
 from .host import Host
 from .blob import Blob
@@ -32,15 +31,9 @@ class Inflater:
     def __init__(
         self,
         step_size: float,
-        rotation_step_size: float,
         bead_sigma: float,
-        max_size_modifier: float,
-        max_beads: int,
-        num_dynamics_steps: int,
-        bond_epsilon: typing.Optional[float] = 1.,
-        nonbond_epsilon: typing.Optional[float] = 5.,
-        beta: typing.Optional[float] = 2.,
-        random_seed: typing.Optional[int] = 1000,
+        num_beads: int,
+        num_steps: int,
     ):
         """
         Initialize a :class:`Spinner` instance.
@@ -50,57 +43,21 @@ class Inflater:
             step_size:
                 The relative size of the step to take during step.
 
-            rotation_step_size:
-                The relative size of the rotation to take during step.
-
             bead_sigma:
                 Bead sigma to use in Blob.
 
-            max_size_modifier:
-                Maximum percent to modify blob by.
-
-            max_beads:
-                Maximum number of beads in Blob.
+            num_beads:
+                Number of beads in Blob.
 
             num_steps:
                 Number of steps to run growth for.
 
-            num_dynamics_steps:
-                Number of steps for each dynamics run.
-
-            bond_epsilon:
-                Value of epsilon used in the bond potential between
-                beads.
-
-            nonbond_epsilon:
-                Value of epsilon used in the nonbond potential in MC
-                moves. Determines strength of the nonbond potential.
-
-            beta:
-                Value of beta used in the in MC moves. Beta takes the
-                place of the inverse boltzmann temperature.
-
-            random_seed:
-                Random seed to use for MC algorithm. Should only be set
-                to ``None`` if system-based random seed is desired.
-
         """
 
         self._step_size = step_size
-        self._rotation_step_size = rotation_step_size
         self._bead_sigma = bead_sigma
-        self._max_size_modifier = max_size_modifier
-        self._max_beads = max_beads
-        self._num_dynamics_steps = num_dynamics_steps
-        self._bond_epsilon = bond_epsilon
-        self._nonbond_epsilon = nonbond_epsilon
-        self._beta = beta
-        if random_seed is None:
-            np.random.seed()
-            random.seed()
-        else:
-            np.random.seed(random_seed)
-            random.seed(random_seed)
+        self._num_beads = num_beads
+        self._num_steps = num_steps
 
     def _get_distances(self, host: Host, blob: Blob) -> np.ndarray:
         return cdist(
@@ -144,16 +101,24 @@ class Inflater:
 
         """
 
-        # for num_beads in range(1, self._max_beads):
         # Define an idealised blob based on num_beads.
         blob = Blob.init_from_idealised_geometry(
-            num_beads=self._max_beads,
+            num_beads=self._num_beads,
             bead_sigma=self._bead_sigma,
         )
         blob = blob.with_centroid(host.get_centroid())
 
+        host_maximum_diameter = host.get_maximum_diameter()
+        blob_maximum_diameter = blob.get_maximum_diameter()
         movable_bead_ids = set([i.get_id() for i in blob.get_beads()])
-        for step in range(self._num_dynamics_steps):
+        for step in range(self._num_steps):
+            # If the distance is further than the maximum diameter.
+            # Stop.
+            blob_maximum_diameter = blob.get_maximum_diameter()
+            if blob_maximum_diameter > host_maximum_diameter:
+                yield step_result
+                print(f'breaking at step: {step}')
+                break
             for bead in blob.get_beads():
                 if bead.get_id() not in movable_bead_ids:
                     continue
