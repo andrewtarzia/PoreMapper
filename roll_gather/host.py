@@ -12,6 +12,8 @@ from __future__ import annotations
 from collections import abc
 import typing
 
+from scipy.spatial.distance import euclidean
+
 from .atom import Atom
 import numpy as np
 
@@ -91,6 +93,18 @@ class Host:
         """
 
         return np.array(self._position_matrix.T)
+
+    def get_maximum_diameter(self) -> float:
+        """
+        Return the maximum diameter.
+
+        This method does not account for the van der Waals radius of
+        atoms.
+
+        """
+
+        coords = self._position_matrix
+        return float(euclidean(coords.min(axis=1), coords.max(axis=1)))
 
     def get_atoms(self) -> abc.Iterable[Atom]:
         """
