@@ -205,51 +205,6 @@ class Blob:
         )
         return clone
 
-    def with_new_bead(
-        self,
-        min_host_guest_distance: float,
-    ) -> Blob:
-        """
-        Return clone Blob with new bead.
-
-        Parameters:
-
-            min_host_guest_distance:
-                Minimum distance between blob and host.
-
-        Returns:
-
-            Blob with new bead.
-
-        """
-
-        pos_mat = self.get_position_matrix()
-
-        # Pick a direction randomly from a sphere.
-        vec = sample_spherical(1)
-        # Multiply by host-guest distance /2.
-        rand = random.random()
-        vec = vec * rand * (min_host_guest_distance / 2)
-        placement_vec = pos_mat[-1] + vec.T
-
-        # Place bead.
-        new_beads = self._beads + (Bead(
-            id=self._beads[-1].get_id()+1,
-            sigma=self._sigma,
-        ), )
-        new_position_matrix = np.vstack([
-            pos_mat, placement_vec
-        ])
-
-        new_blob = self.__class__.__new__(self.__class__)
-        Blob.__init__(
-            self=new_blob,
-            beads=new_beads,
-            position_matrix=np.array(new_position_matrix),
-        )
-
-        return new_blob
-
     def reduce_blob(self) -> Blob:
         """
         Return clone Blob with only convex hull beads.
