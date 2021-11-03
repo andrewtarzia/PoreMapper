@@ -139,8 +139,8 @@ class Inflater:
             if blob_maximum_diameter > host_maximum_diameter:
                 yield step_result
                 print(
-                    f'breaking at step: {step} with blob larger than '
-                    'host'
+                    f'Pop! breaking at step: {step} with blob larger '
+                    'than host'
                 )
                 break
             if len(movable_bead_ids) == 0:
