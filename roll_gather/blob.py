@@ -96,7 +96,7 @@ class Blob:
 
         """
 
-        radius = 0.01
+        sphere_radius = 0.01
         golden_angle = np.pi * (3 - np.sqrt(5))
         theta = golden_angle * np.arange(num_beads)
         z = np.linspace(
@@ -106,9 +106,9 @@ class Blob:
         )
         radius = np.sqrt(1 - z * z)
         points = np.zeros((3, num_beads))
-        points[0, :] = radius * np.cos(theta) * radius
-        points[1, :] = radius * np.sin(theta) * radius
-        points[2, :] = z * radius
+        points[0, :] = sphere_radius * np.cos(theta) * radius
+        points[1, :] = sphere_radius * np.sin(theta) * radius
+        points[2, :] = z * sphere_radius
 
         self._position_matrix = np.array(
             points,
