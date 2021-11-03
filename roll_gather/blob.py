@@ -30,8 +30,6 @@ class BlobProperties:
 
     num_beads: int
     potential: float
-    radius_of_gyration: float
-    sphericity: float
     maximum_diameter: float
 
 
@@ -307,14 +305,9 @@ class Blob:
 
     def get_properties(self, potential: float) -> BlobProperties:
 
-        radius_of_gyration = 0
-        sphericity = 0
-
         return BlobProperties(
             num_beads=self._num_beads,
             potential=potential,
-            radius_of_gyration=radius_of_gyration,
-            sphericity=sphericity,
             maximum_diameter=self.get_maximum_diameter(),
         )
 

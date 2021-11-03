@@ -1,4 +1,6 @@
 import os
+
+from numpy.lib.function_base import average
 import roll_gather as rg
 
 import matplotlib.pyplot as plt
@@ -42,6 +44,11 @@ for step_result in calculator.inflate_blob(host=host):
         'blob_max_diam': step_result.blob.get_maximum_diameter(),
         'pore_max_diam': step_result.pore.get_maximum_distance_to_com(),
         'pore_mean_diam': step_result.pore.get_mean_distance_to_com(),
+        'pore_volume': step_result.pore.get_volume(),
+        'num_windows': len(step_result.pore.get_windows()),
+        'max_window_size': max(step_result.pore.get_windows()),
+        'avg_window_size': average(step_result.pore.get_windows()),
+        'min_window_size': min(step_result.pore.get_windows()),
     }
 
 # Do final structure.
@@ -53,7 +60,7 @@ pore.write_xyz_file(
 )
 
 # Do a plot of properties.
-fig, ax = plt.subplots(2, 1, sharex=True, figsize=(8, 5))
+fig, ax = plt.subplots(4, 1, sharex=True, figsize=(8, 8))
 ax[0].plot(
     [i for i in blob_properties],
     [
@@ -61,25 +68,81 @@ ax[0].plot(
     ],
     c='k',
     lw=2,
+    label='movable beads',
+)
+ax[0].plot(
+    [i for i in blob_properties],
+    [
+        blob_properties[i]['num_windows'] for i in blob_properties
+    ],
+    c='green',
+    lw=2,
+    label='windows',
 )
 ax[0].tick_params(axis='both', which='major', labelsize=16)
-ax[0].set_ylabel('num. movable beads', fontsize=16)
+ax[0].set_ylabel('count', fontsize=16)
+ax[0].legend(fontsize=16)
 
 ax[1].plot(
+    [i for i in blob_properties],
+    [
+        blob_properties[i]['pore_volume'] for i in blob_properties
+    ],
+    c='r',
+    lw=2,
+)
+ax[1].tick_params(axis='both', which='major', labelsize=16)
+ax[1].set_ylabel(r'pore vol. [$\mathrm{\AA}^3$]', fontsize=16)
+
+ax[2].plot(
+    [i for i in blob_properties],
+    [
+        blob_properties[i]['max_window_size'] for i in blob_properties
+    ],
+    c='k',
+    lw=2,
+    linestyle='--',
+    label='max',
+)
+ax[2].plot(
+    [i for i in blob_properties],
+    [
+        blob_properties[i]['avg_window_size'] for i in blob_properties
+    ],
+    c='r',
+    lw=2,
+    linestyle='--',
+    label='avg',
+)
+ax[2].plot(
+    [i for i in blob_properties],
+    [
+        blob_properties[i]['min_window_size'] for i in blob_properties
+    ],
+    c='b',
+    lw=2,
+    linestyle='--',
+    label='min',
+)
+ax[2].tick_params(axis='both', which='major', labelsize=16)
+ax[2].set_ylabel(r'window diam. [$\mathrm{\AA}$]', fontsize=16)
+ax[2].legend(fontsize=16)
+
+ax[-1].plot(
     [i for i in blob_properties],
     [blob_properties[i]['blob_max_diam'] for i in blob_properties],
     c='#DC267F',
     label='blob',
     lw=2,
 )
-ax[1].plot(
+ax[-1].plot(
     [i for i in blob_properties],
     [blob_properties[i]['pore_max_diam'] for i in blob_properties],
     c='#785EF0',
     label='pore max',
     lw=2,
 )
-ax[1].plot(
+ax[-1].plot(
     [i for i in blob_properties],
     [blob_properties[i]['pore_mean_diam'] for i in blob_properties],
     c='#648FFF',
@@ -87,11 +150,11 @@ ax[1].plot(
     lw=2,
     linestyle='--'
 )
-ax[1].tick_params(axis='both', which='major', labelsize=16)
-ax[1].set_xlim(0, None)
-ax[1].set_xlabel('step', fontsize=16)
-ax[1].set_ylabel(r'max. diam. [$\mathrm{\AA}$]', fontsize=16)
-ax[1].legend(fontsize=16)
+ax[-1].tick_params(axis='both', which='major', labelsize=16)
+ax[-1].set_xlim(0, None)
+ax[-1].set_xlabel('step', fontsize=16)
+ax[-1].set_ylabel(r'pore diam. [$\mathrm{\AA}$]', fontsize=16)
+ax[-1].legend(fontsize=16)
 fig.tight_layout()
 fig.savefig(
     'inflation_example.pdf',

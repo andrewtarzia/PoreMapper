@@ -13,6 +13,7 @@ from collections import abc
 
 from dataclasses import dataclass, asdict
 import numpy as np
+from scipy.spatial import ConvexHull
 from scipy.spatial.distance import euclidean
 import json
 
@@ -22,16 +23,10 @@ from .blob import Blob
 
 @dataclass
 class PoreProperties:
-    """
-    Data of a Pore.
-
-    """
-
     num_beads: int
-    potential: float
-    radius_of_gyration: float
-    sphericity: float
-    maximum_diameter: float
+    max_dist_to_com: float
+    mean_dist_to_com: float
+    volume: float
 
 
 class Pore:
@@ -184,17 +179,23 @@ class Pore:
             for i in self._position_matrix.T
         ))
 
-    def get_properties(self, potential: float) -> PoreProperties:
+    def get_volume(self) -> float:
+        """
+        Gets the volume of the convex hull of the pore.
 
-        radius_of_gyration = 0
-        sphericity = 0
+        This method does not account for the van der Waals radius of
+        atoms.
+
+        """
+        return ConvexHull(self._position_matrix.T).volume
+
+    def get_properties(self) -> PoreProperties:
 
         return PoreProperties(
             num_beads=self._num_beads,
-            potential=potential,
-            radius_of_gyration=radius_of_gyration,
-            sphericity=sphericity,
-            maximum_diameter=self.get_maximum_diameter(),
+            max_dist_to_com=self.get_max_dist_to_com(),
+            mean_dist_to_com=self.get_mean_dist_to_com(),
+            volume=self.get_volume(),
         )
 
     def write_properties(self, path: str, potential: float) -> None:
