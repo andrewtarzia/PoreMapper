@@ -13,7 +13,7 @@ print(host)
 # Define calculator object.
 calculator = rg.Inflater(
     step_size=0.1,
-    bead_sigma=1.5,
+    bead_sigma=0.5,
     num_beads=100,
     num_steps=100,
 )
@@ -30,18 +30,27 @@ for step_result in calculator.inflate_blob(host=host):
     print(blob)
     pore = step_result.pore
     print(pore)
-    blob.write_xyz_file(
-        f'min_example_output/blob_{step_result.step}.xyz'
-    )
-    pore.write_xyz_file(
-        f'min_example_output/pore_{step_result.step}.xyz'
-    )
+    if step_result.step % 5 == 0:
+        blob.write_xyz_file(
+            f'min_example_output/blob_{step_result.step}.xyz'
+        )
+        pore.write_xyz_file(
+            f'min_example_output/pore_{step_result.step}.xyz'
+        )
     blob_properties[step_result.step] = {
         'num_movable_beads': step_result.num_movable_beads,
         'blob_max_diam': step_result.blob.get_maximum_diameter(),
         'pore_max_diam': step_result.pore.get_maximum_distance_to_com(),
         'pore_mean_diam': step_result.pore.get_mean_distance_to_com(),
     }
+
+# Do final structure.
+blob.write_xyz_file(
+    f'min_example_output/blob_{step_result.step}.xyz'
+)
+pore.write_xyz_file(
+    f'min_example_output/pore_{step_result.step}.xyz'
+)
 
 # Do a plot of properties.
 fig, ax = plt.subplots(2, 1, sharex=True, figsize=(8, 5))
