@@ -60,17 +60,3 @@ def rotation_matrix_arbitrary_axis(angle, axis):
         [e21, e22, e23],
         [e31, e32, e33]
     ])).as_matrix()
-
-
-def sample_spherical(npoints, ndim=3):
-    """
-    Sample spherical coordinates.
-
-    From:
-    https://stackoverflow.com/questions/33976911/generate-a-random-sample-of-points-distributed-on-the-surface-of-a-unit-sphere
-
-    """
-    vec = np.random.randn(ndim, npoints)
-    vec /= np.linalg.norm(vec, axis=0)
-
-    return vec

@@ -18,7 +18,6 @@ from scipy.spatial.distance import euclidean
 import json
 
 from .bead import Bead
-from .utilities import sample_spherical
 
 
 @dataclass
@@ -87,12 +86,32 @@ class Blob:
         return blob
 
     def _define_idealised_geometry(self, num_beads: int):
+        """
+        Define a sphere with num_beads and radius 0.1.
 
-        # Pick a directions randomly from a sphere.
-        vec = sample_spherical(num_beads)
+        Here I use code by Alexandre Devert for spreading points on a
+        sphere: http://blog.marmakoide.org/?p=1
+
+        Same code as pywindow.
+
+        """
+
+        radius = 0.01
+        golden_angle = np.pi * (3 - np.sqrt(5))
+        theta = golden_angle * np.arange(num_beads)
+        z = np.linspace(
+            1 - 1.0 / num_beads,
+            1.0 / num_beads - 1.0,
+            num_beads,
+        )
+        radius = np.sqrt(1 - z * z)
+        points = np.zeros((3, num_beads))
+        points[0, :] = radius * np.cos(theta) * radius
+        points[1, :] = radius * np.sin(theta) * radius
+        points[2, :] = z * radius
 
         self._position_matrix = np.array(
-            vec,
+            points,
             dtype=np.float64,
         )
 
@@ -265,6 +284,10 @@ class Blob:
             potential=potential,
             maximum_diameter=self.get_maximum_diameter(),
         )
+
+    def get_windows(self) -> abc.Iterable[float]:
+        windows = [0]
+        return windows
 
     def write_properties(self, path: str, potential: float) -> None:
         """

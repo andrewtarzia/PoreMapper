@@ -27,7 +27,7 @@ class PoreProperties:
     max_dist_to_com: float
     mean_dist_to_com: float
     volume: float
-
+    windows: abc.Iterable[float]
 
 class Pore:
     """
@@ -64,6 +64,7 @@ class Pore:
                 positions.append(pos_mat[bead.get_id()])
                 count += 1
 
+        self._blob = blob
         self._beads = tuple(beads)
         self._sigma = self._beads[0].get_sigma()
         self._num_beads = len(self._beads)
@@ -71,6 +72,9 @@ class Pore:
             np.array(positions).T,
             dtype=np.float64,
         )
+
+    def get_blob(self) -> Blob:
+        return self._blob
 
     def get_position_matrix(self) -> np.ndarray:
         """
@@ -187,7 +191,11 @@ class Pore:
         atoms.
 
         """
-        return ConvexHull(self._position_matrix.T).volume
+
+        if self.get_num_beads() < 4:
+            return 0.
+        else:
+            return ConvexHull(self._position_matrix.T).volume
 
     def get_properties(self) -> PoreProperties:
 
@@ -196,7 +204,11 @@ class Pore:
             max_dist_to_com=self.get_max_dist_to_com(),
             mean_dist_to_com=self.get_mean_dist_to_com(),
             volume=self.get_volume(),
+            windows=self.get_windows(),
         )
+
+    def get_windows(self) -> abc.Iterable[float]:
+        return self._blob.get_windows()
 
     def write_properties(self, path: str, potential: float) -> None:
         """

@@ -28,10 +28,8 @@ for step_result in calculator.inflate_blob(host=host):
         f'step: {step_result.step}, '
         f'num_movable_beads: {step_result.num_movable_beads}'
     )
-    blob = step_result.blob
-    print(blob)
     pore = step_result.pore
-    print(pore)
+    blob = step_result.pore.get_blob()
     if step_result.step % 5 == 0:
         blob.write_xyz_file(
             f'min_example_output/blob_{step_result.step}.xyz'
@@ -39,16 +37,17 @@ for step_result in calculator.inflate_blob(host=host):
         pore.write_xyz_file(
             f'min_example_output/pore_{step_result.step}.xyz'
         )
+
     blob_properties[step_result.step] = {
         'num_movable_beads': step_result.num_movable_beads,
-        'blob_max_diam': step_result.blob.get_maximum_diameter(),
-        'pore_max_diam': step_result.pore.get_maximum_distance_to_com(),
-        'pore_mean_diam': step_result.pore.get_mean_distance_to_com(),
-        'pore_volume': step_result.pore.get_volume(),
-        'num_windows': len(step_result.pore.get_windows()),
-        'max_window_size': max(step_result.pore.get_windows()),
-        'avg_window_size': average(step_result.pore.get_windows()),
-        'min_window_size': min(step_result.pore.get_windows()),
+        'blob_max_diam': blob.get_maximum_diameter(),
+        'pore_max_diam': pore.get_maximum_distance_to_com(),
+        'pore_mean_diam': pore.get_mean_distance_to_com(),
+        'pore_volume': pore.get_volume(),
+        'num_windows': len(pore.get_windows()),
+        'max_window_size': max(pore.get_windows()),
+        'avg_window_size': average(pore.get_windows()),
+        'min_window_size': min(pore.get_windows()),
     }
 
 # Do final structure.

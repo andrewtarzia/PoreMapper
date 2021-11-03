@@ -15,13 +15,6 @@ from .pore import Pore
 
 
 @dataclass(frozen=True)
-class StepResult:
-    step: int
-    potential: float
-    blob: Blob
-
-
-@dataclass(frozen=True)
 class InflationStepResult:
     step: int
     num_movable_beads: float
