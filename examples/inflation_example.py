@@ -15,8 +15,8 @@ print(host)
 # Define calculator object.
 calculator = rg.Inflater(
     step_size=0.1,
-    bead_sigma=0.5,
-    num_beads=100,
+    bead_sigma=1.2,
+    num_beads=400,
     num_steps=100,
 )
 
@@ -38,16 +38,20 @@ for step_result in calculator.inflate_blob(host=host):
             f'min_example_output/pore_{step_result.step}.xyz'
         )
 
+    windows = pore.get_windows()
+    print(f'windows: {windows}\n')
     blob_properties[step_result.step] = {
-        'num_movable_beads': step_result.num_movable_beads,
+        'num_movable_beads': (
+            step_result.num_movable_beads/blob.get_num_beads()
+        ),
         'blob_max_diam': blob.get_maximum_diameter(),
         'pore_max_diam': pore.get_maximum_distance_to_com(),
         'pore_mean_diam': pore.get_mean_distance_to_com(),
         'pore_volume': pore.get_volume(),
-        'num_windows': len(pore.get_windows()),
-        'max_window_size': max(pore.get_windows()),
-        'avg_window_size': average(pore.get_windows()),
-        'min_window_size': min(pore.get_windows()),
+        'num_windows': len(windows),
+        'max_window_size': max(windows),
+        'avg_window_size': average(windows),
+        'min_window_size': min(windows),
     }
 
 # Do final structure.
@@ -67,7 +71,7 @@ ax[0].plot(
     ],
     c='k',
     lw=2,
-    label='movable beads',
+    label='frac. movable beads',
 )
 ax[0].plot(
     [i for i in blob_properties],
@@ -76,10 +80,10 @@ ax[0].plot(
     ],
     c='green',
     lw=2,
-    label='windows',
+    label='num. windows',
 )
 ax[0].tick_params(axis='both', which='major', labelsize=16)
-ax[0].set_ylabel('count', fontsize=16)
+ax[0].set_ylabel('value', fontsize=16)
 ax[0].legend(fontsize=16)
 
 ax[1].plot(
@@ -124,28 +128,28 @@ ax[2].plot(
     label='min',
 )
 ax[2].tick_params(axis='both', which='major', labelsize=16)
-ax[2].set_ylabel(r'window diam. [$\mathrm{\AA}$]', fontsize=16)
+ax[2].set_ylabel(r'window rad. [$\mathrm{\AA}$]', fontsize=16)
 ax[2].legend(fontsize=16)
 
-ax[-1].plot(
-    [i for i in blob_properties],
-    [blob_properties[i]['blob_max_diam'] for i in blob_properties],
-    c='#DC267F',
-    label='blob',
-    lw=2,
-)
+# ax[-1].plot(
+#     [i for i in blob_properties],
+#     [blob_properties[i]['blob_max_diam'] for i in blob_properties],
+#     c='#DC267F',
+#     label='blob',
+#     lw=2,
+# )
 ax[-1].plot(
     [i for i in blob_properties],
     [blob_properties[i]['pore_max_diam'] for i in blob_properties],
     c='#785EF0',
-    label='pore max',
+    label='max',
     lw=2,
 )
 ax[-1].plot(
     [i for i in blob_properties],
     [blob_properties[i]['pore_mean_diam'] for i in blob_properties],
     c='#648FFF',
-    label='pore mean',
+    label='mean',
     lw=2,
     linestyle='--'
 )
