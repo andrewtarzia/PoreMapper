@@ -29,36 +29,18 @@ class Inflater:
 
     """
 
-    def __init__(
-        self,
-        step_size: float,
-        bead_sigma: float,
-        num_beads: int,
-        num_steps: int,
-    ):
+    def __init__(self, bead_sigma: float):
         """
-        Initialize a :class:`Spinner` instance.
+        Initialize a :class:`Inflater` instance.
 
         Parameters:
-
-            step_size:
-                The relative size of the step to take during step.
 
             bead_sigma:
                 Bead sigma to use in Blob.
 
-            num_beads:
-                Number of beads in Blob.
-
-            num_steps:
-                Number of steps to run growth for.
-
         """
 
-        self._step_size = step_size
         self._bead_sigma = bead_sigma
-        self._num_beads = num_beads
-        self._num_steps = num_steps
 
     def _get_distances(self, host: Host, blob: Blob) -> np.ndarray:
         return cdist(
@@ -122,17 +104,31 @@ class Inflater:
 
         """
 
+        starting_radius = 0.05
+        num_steps = 100
+
+        # Move host to origin.
+        host = host.with_centroid([0., 0., 0.])
+        host_maximum_diameter = host.get_maximum_diameter()
+
+        # Get num beads and step size based on maximum diameter of
+        # host. Using pyWindow code.
+        host_radius = host_maximum_diameter / 2
+        host_surface_area = 4 * np.pi * host_radius**2
+        num_beads = int(np.log10(host_surface_area) * 250)
+        step_size = (host_radius-starting_radius)/num_steps
+
         # Define an idealised blob based on num_beads.
         blob = Blob.init_from_idealised_geometry(
-            num_beads=self._num_beads,
             bead_sigma=self._bead_sigma,
+            num_beads=num_beads,
+            sphere_radius=starting_radius,
         )
         blob = blob.with_centroid(host.get_centroid())
 
-        host_maximum_diameter = host.get_maximum_diameter()
         blob_maximum_diameter = blob.get_maximum_diameter()
         movable_bead_ids = set([i.get_id() for i in blob.get_beads()])
-        for step in range(self._num_steps):
+        for step in range(num_steps):
             # If the distance is further than the maximum diameter.
             # Stop.
             blob_maximum_diameter = blob.get_maximum_diameter()
@@ -159,7 +155,7 @@ class Inflater:
                 # Perform translation.
                 com_to_bead = pos_mat[bead.get_id()] - centroid
                 com_to_bead /= np.linalg.norm(com_to_bead)
-                translation_vector = self._step_size * -com_to_bead
+                translation_vector = step_size * -com_to_bead
                 new_blob = self._translate_beads_along_vector(
                     blob=blob,
                     vector=translation_vector,

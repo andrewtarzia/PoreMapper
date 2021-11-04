@@ -18,12 +18,7 @@ def run_calculation(prefix):
     host = rg.Host.init_from_xyz_file(path=f'{prefix}.xyz')
 
     # Define calculator object.
-    calculator = rg.Inflater(
-        step_size=0.1,
-        bead_sigma=0.5,
-        num_beads=400,
-        num_steps=100,
-    )
+    calculator = rg.Inflater(bead_sigma=0.5)
 
     # Run calculator on host object, analysing output.
     blob_properties = {}

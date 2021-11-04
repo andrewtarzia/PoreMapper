@@ -9,6 +9,7 @@ Blob class for optimisation.
 """
 
 from __future__ import annotations
+
 from collections import abc
 
 from dataclasses import dataclass, asdict
@@ -80,6 +81,7 @@ class Blob:
         cls,
         bead_sigma: float,
         num_beads: int,
+        sphere_radius: float,
     ) -> Blob:
         """
         Initalise a blob in an idealised geometry.
@@ -93,10 +95,14 @@ class Blob:
             Bead(i, bead_sigma) for i in range(num_beads)
         )
         blob._movable_bead_ids = tuple(i.get_id() for i in blob._beads)
-        blob._define_idealised_geometry(num_beads)
+        blob._define_idealised_geometry(num_beads, sphere_radius)
         return blob
 
-    def _define_idealised_geometry(self, num_beads: int):
+    def _define_idealised_geometry(
+        self,
+        num_beads: int,
+        sphere_radius: float
+    ) -> None:
         """
         Define a sphere with num_beads and radius 0.1.
 
@@ -107,7 +113,6 @@ class Blob:
 
         """
 
-        sphere_radius = 0.05
         golden_angle = np.pi * (3 - np.sqrt(5))
         theta = golden_angle * np.arange(num_beads)
         z = np.linspace(
