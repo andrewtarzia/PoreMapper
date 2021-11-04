@@ -5,14 +5,15 @@ import roll_gather as rg
 def run_calculation(prefix):
     # Read in host from xyz file.
     host = rg.Host.init_from_xyz_file(path=f'{prefix}.xyz')
+    host = host.with_centroid([0., 0., 0.])
 
     # Define calculator object.
-    calculator = rg.Inflater(bead_sigma=0.5)
+    calculator = rg.Inflater(bead_sigma=1.0)
 
     # Run calculator on host object, analysing output.
-    print(prefix)
+    print(f'doing {prefix}')
     final_result = calculator.get_inflated_blob(host=host)
-    pore = final_result.total_pore
+    pore = final_result.pore
     blob = final_result.pore.get_blob()
     windows = pore.get_windows()
     print(final_result)
@@ -33,6 +34,7 @@ def run_calculation(prefix):
     print()
 
     # Do final structure.
+    host.write_xyz_file(f'min_example_output/{prefix}_final.xyz')
     blob.write_xyz_file(f'min_example_output/{prefix}_blob_final.xyz')
     pore.write_xyz_file(f'min_example_output/{prefix}_pore_total.xyz')
 

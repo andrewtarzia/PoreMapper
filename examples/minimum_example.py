@@ -16,6 +16,7 @@ def run_pywindow(prefix):
 def run_calculation(prefix):
     # Read in host from xyz file.
     host = rg.Host.init_from_xyz_file(path=f'{prefix}.xyz')
+    host = host.with_centroid([0., 0., 0.])
 
     # Define calculator object.
     calculator = rg.Inflater(bead_sigma=0.5)
