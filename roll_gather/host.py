@@ -210,6 +210,36 @@ class Host:
             len(atom_ids)
         )
 
+    def _write_xyz_content(self):
+        """
+        Write basic `.xyz` file content of Molecule.
+
+        """
+        coords = self.get_position_matrix()
+        content = [0]
+        for i, atom in enumerate(self.get_atoms(), 1):
+            x, y, z = (i for i in coords[atom.get_id()])
+            content.append(
+                f'{atom.get_element_string()} {x:f} {y:f} {z:f}\n'
+            )
+        # Set first line to the atom_count.
+        content[0] = f'{i}\n\n'
+
+        return content
+
+    def write_xyz_file(self, path):
+        """
+        Write basic `.xyz` file of Molecule to `path`.
+
+        Connectivity is not maintained in this file type!
+
+        """
+
+        content = self._write_xyz_content()
+
+        with open(path, 'w') as f:
+            f.write(''.join(content))
+
     def __str__(self):
         return repr(self)
 
