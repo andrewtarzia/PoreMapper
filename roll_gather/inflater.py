@@ -104,7 +104,7 @@ class Inflater:
 
         """
 
-        starting_radius = 0.05
+        starting_radius = 0.1
         num_steps = 50
 
         # Move host to origin.
@@ -227,5 +227,4 @@ class Inflater:
             num_movable_beads=step_result.num_movable_beads,
             blob=step_result.blob,
             pore=step_result.pore,
-            total_pore=total_pore,
         )

@@ -19,7 +19,6 @@ class InflationResult:
     num_movable_beads: float
     blob: Blob
     pore: Pore
-    total_pore: Pore
 
 
 @dataclass(frozen=True)

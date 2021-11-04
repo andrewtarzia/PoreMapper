@@ -19,7 +19,7 @@ def run_calculation(prefix):
     host = host.with_centroid([0., 0., 0.])
 
     # Define calculator object.
-    calculator = rg.Inflater(bead_sigma=0.5)
+    calculator = rg.Inflater(bead_sigma=1.0)
 
     # Run calculator on host object, analysing output.
     blob_properties = {}
