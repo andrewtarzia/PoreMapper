@@ -45,12 +45,12 @@ class Pore:
 
         Parameters:
 
-            beads:
-                Beads that define the blob.
+            blob:
+                Blob defining the pore.
 
-            position_matrix:
-                A ``(n, 3)`` matrix holding the position of every atom in
-                the :class:`.Molecule`.
+            nonmovable_bead_ids:
+                Bead ids in blob that are not movable, and part of
+                Pore.
 
         """
 
@@ -73,6 +73,109 @@ class Pore:
             dtype=np.float64,
         )
 
+    @classmethod
+    def init(
+        cls,
+        blob: Blob,
+        num_beads: int,
+        sigma: float,
+        beads: abc.Iterable[Bead],
+        position_matrix: np.ndarray,
+    ) -> Pore:
+        """
+        Initalise an empty pore.
+
+        Parameters:
+
+            blob:
+                Blob that defines the pore.
+
+            num_beads:
+                Number of beads in pore.
+
+            sigma:
+                Sigma of beads in pore.
+
+            beads:
+                Beads in pore.
+
+            position_matrix:
+                A ``(n, 3)`` matrix holding the position of every atom in
+                the :class:`.Molecule`.
+
+        """
+
+        pore = cls.__new__(cls)
+        pore._blob = blob
+        pore._num_beads = num_beads
+        pore._sigma = sigma
+        pore._beads = beads
+        pore._position_matrix = np.array(
+            position_matrix.T,
+            dtype=np.float64,
+        )
+        return pore
+
+    def with_blob(
+        self,
+        blob: Blob,
+    ) -> Pore:
+        """
+        Return a clone with a new Blob.
+
+        Parameters:
+
+            blob:
+                The blob to be applied.
+
+        """
+
+        return Pore.init(
+            blob=blob,
+            num_beads=self._num_beads,
+            sigma=self._sigma,
+            beads=self._beads,
+            position_matrix=self._position_matrix.T,
+        )
+
+    def with_new_pore(
+        self,
+        pore: Pore,
+    ) -> Pore:
+        """
+        Return a clone with a new pore.
+
+        Parameters:
+
+            pore:
+                The pore to be applied.
+
+        """
+
+        # Place new beads.
+        old_num_beads = len(self._beads)
+        pore_num_beads = pore.get_num_beads()
+        new_beads = tuple(
+            Bead(id=i, sigma=self._sigma)
+            for i in range(old_num_beads+pore_num_beads)
+        )
+
+        if old_num_beads == 0:
+            new_position_matrix = pore.get_position_matrix()
+        else:
+            new_position_matrix = np.vstack([
+                self._position_matrix.T,
+                pore.get_position_matrix(),
+            ])
+        new_num_beads = len(new_beads)
+        return Pore.init(
+            blob=self._blob,
+            num_beads=new_num_beads,
+            sigma=self._sigma,
+            beads=new_beads,
+            position_matrix=new_position_matrix,
+        )
+
     def get_blob(self) -> Blob:
         return self._blob
 
@@ -86,7 +189,6 @@ class Pore:
             x, y and z coordinates of an atom.
 
         """
-
         return np.array(self._position_matrix.T)
 
     def get_centroid(self) -> np.ndarray:
