@@ -175,6 +175,9 @@ class Inflater:
                 # If, do not update blob.
                 if if_steric_clash:
                     movable_bead_ids.remove(bead.get_id())
+                    blob = blob.with_movable_bead_ids(
+                        movable_bead_ids=movable_bead_ids,
+                    )
                 else:
                     blob = blob.with_position_matrix(
                         position_matrix=new_blob.get_position_matrix(),
