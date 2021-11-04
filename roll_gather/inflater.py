@@ -219,13 +219,6 @@ class Inflater:
 
         """
 
-        total_pore = Pore.init(
-            blob=Blob.init_empty(),
-            num_beads=1,
-            sigma=self._bead_sigma,
-            beads=(Bead(id=0, sigma=self._bead_sigma), ),
-            position_matrix=np.array([[0, 0, 0]]),
-        )
         for step_result in self.inflate_blob(host):
             continue
 
