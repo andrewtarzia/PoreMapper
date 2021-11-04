@@ -139,7 +139,7 @@ class Pore:
                 f'B {x:f} {y:f} {z:f}\n'
             )
         # Set first line to the atom_count.
-        content[0] = f'{i}\nBlob!\n'
+        content[0] = f'{i}\nPore!\n'
 
         return content
 
