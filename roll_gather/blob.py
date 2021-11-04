@@ -77,6 +77,21 @@ class Blob:
         )
 
     @classmethod
+    def init_empty(cls) -> Blob:
+        """
+        Initalise an empty Blob.
+
+        """
+
+        blob = cls.__new__(cls)
+        blob._num_beads = 0
+        blob._sigma = 0
+        blob._beads = ()
+        blob._movable_bead_ids = ()
+        blob._position_matrix = ()
+        return blob
+
+    @classmethod
     def init_from_idealised_geometry(
         cls,
         bead_sigma: float,
