@@ -20,7 +20,7 @@ from .host import Host
 from .blob import Blob
 from .bead import Bead
 from .pore import Pore
-from .step_result import InflationStepResult
+from .result import InflationResult, InflationStepResult
 
 
 class Inflater:
@@ -105,7 +105,7 @@ class Inflater:
         """
 
         starting_radius = 0.05
-        num_steps = 100
+        num_steps = 50
 
         # Move host to origin.
         host = host.with_centroid([0., 0., 0.])
@@ -200,3 +200,39 @@ class Inflater:
                 pore=pore,
             )
             yield step_result
+
+    def get_inflated_blob(
+        self,
+        host: Host,
+    ) -> InflationResult:
+        """
+        Mould blob from beads inside host.
+
+        Parameters:
+
+            host:
+                The host to analyse.
+
+        Returns:
+
+            The final result of inflation.
+
+        """
+
+        total_pore = Pore.init(
+            blob=Blob.init_empty(),
+            num_beads=1,
+            sigma=self._bead_sigma,
+            beads=(Bead(id=0, sigma=self._bead_sigma), ),
+            position_matrix=np.array([[0, 0, 0]]),
+        )
+        for step_result in self.inflate_blob(host):
+            continue
+
+        return InflationResult(
+            step=step_result.step,
+            num_movable_beads=step_result.num_movable_beads,
+            blob=step_result.blob,
+            pore=step_result.pore,
+            total_pore=total_pore,
+        )
