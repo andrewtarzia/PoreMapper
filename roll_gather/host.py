@@ -127,6 +127,49 @@ class Host:
 
         return len(self._atoms)
 
+    def with_displacement(self, displacement: np.ndarray) -> Host:
+        """
+        Return a displaced clone Blob.
+
+        Parameters:
+
+            displacement:
+                The displacement vector to be applied.
+
+        """
+
+        new_position_matrix = (
+            self._position_matrix.T + displacement
+        )
+        return Host(
+            atoms=self._atoms,
+            position_matrix=np.array(new_position_matrix),
+        )
+
+    def with_centroid(
+        self,
+        position: np.ndarray,
+    ) -> Host:
+        """
+        Return a clone with its centroid at `position`.
+
+        Parameters:
+
+            position:
+                This array holds the position on which the centroid of
+                the clone is going to be placed.
+
+        Returns:
+
+            A clone with its centroid at `position`.
+
+        """
+
+        centroid = self.get_centroid()
+        displacement = position-centroid
+        return self.with_displacement(displacement)
+
+
     def get_centroid(
         self,
         atom_ids: typing.Optional[abc.Iterable[int]] = None,
