@@ -12,9 +12,10 @@ from __future__ import annotations
 from collections import abc
 
 from dataclasses import dataclass, asdict
-import random
+from typing import Optional
 import numpy as np
 from scipy.spatial.distance import euclidean
+from sklearn.cluster import MeanShift
 import json
 
 from .bead import Bead
@@ -42,6 +43,7 @@ class Blob:
         self,
         beads: abc.Iterable[Bead],
         position_matrix: np.ndarray,
+        movable_bead_ids: Optional[abc.Iterable[int]] = None,
     ):
         """
         Initialize a :class:`Blob` instance from beads.
@@ -55,11 +57,19 @@ class Blob:
                 A ``(n, 3)`` matrix holding the position of every atom in
                 the :class:`.Molecule`.
 
+            movable_bead_ids:
+                IDs of beads that are movable.
+
         """
 
         self._beads = tuple(beads)
         self._sigma = self._beads[0].get_sigma()
         self._num_beads = len(self._beads)
+        if movable_bead_ids is None:
+            self._movable_bead_ids = tuple(i.get_id() for i in beads)
+        else:
+            self._movable_bead_ids = tuple(movable_bead_ids)
+
         self._position_matrix = np.array(
             position_matrix.T,
             dtype=np.float64,
@@ -82,6 +92,7 @@ class Blob:
         blob._beads = tuple(
             Bead(i, bead_sigma) for i in range(num_beads)
         )
+        blob._movable_bead_ids = tuple(i.get_id() for i in blob._beads)
         blob._define_idealised_geometry(num_beads)
         return blob
 
@@ -96,7 +107,7 @@ class Blob:
 
         """
 
-        sphere_radius = 0.01
+        sphere_radius = 0.05
         golden_angle = np.pi * (3 - np.sqrt(5))
         theta = golden_angle * np.arange(num_beads)
         z = np.linspace(
@@ -190,6 +201,7 @@ class Blob:
         return Blob(
             beads=self._beads,
             position_matrix=np.array(new_position_matrix),
+            movable_bead_ids=self._movable_bead_ids,
         )
 
     def with_centroid(self, position: np.ndarray) -> Blob:
@@ -197,9 +209,28 @@ class Blob:
         Return a clone with a new centroid.
 
         """
+
         centroid = self.get_centroid()
         displacement = position-centroid
         return self.with_displacement(displacement)
+
+    def with_movable_bead_ids(
+        self,
+        movable_bead_ids: abc.Iterable[int],
+    ) -> Blob:
+        """
+        Return a clone with new movable bead ids.
+
+        """
+
+        clone = self.__class__.__new__(self.__class__)
+        Blob.__init__(
+            self=clone,
+            beads=self._beads,
+            position_matrix=self._position_matrix.T,
+            movable_bead_ids=movable_bead_ids,
+        )
+        return clone
 
     def with_position_matrix(
         self,
@@ -221,21 +252,9 @@ class Blob:
             self=clone,
             beads=self._beads,
             position_matrix=np.array(position_matrix),
+            movable_bead_ids=self._movable_bead_ids,
         )
         return clone
-
-    def reduce_blob(self) -> Blob:
-        """
-        Return clone Blob with only convex hull beads.
-
-        Returns:
-
-            Reduced blob.
-
-        """
-
-        print('reduction not implemented yet.')
-        return self
 
     def _write_xyz_content(self) -> str:
         """
@@ -246,8 +265,12 @@ class Blob:
         content = [0]
         for i, bead in enumerate(self.get_beads(), 1):
             x, y, z = (i for i in coords[bead.get_id()])
+            movable = (
+                1 if bead.get_id() in self._movable_bead_ids
+                else 0
+            )
             content.append(
-                f'B {x:f} {y:f} {z:f}\n'
+                f'B {x:f} {y:f} {z:f} {movable}\n'
             )
         # Set first line to the atom_count.
         content[0] = f'{i}\nBlob!\n'
@@ -286,7 +309,38 @@ class Blob:
         )
 
     def get_windows(self) -> abc.Iterable[float]:
-        windows = [0]
+
+        if len(self._movable_bead_ids) == self._num_beads:
+            return [0]
+
+        if len(self._movable_bead_ids) == 0:
+            return [0]
+
+        movable_bead_coords = np.array([
+            self._position_matrix.T[i] for i in self._movable_bead_ids
+        ])
+
+        # Cluster points.
+        clustering = MeanShift().fit(movable_bead_coords)
+        labels = set(clustering.labels_)
+        windows = []
+        for label in labels:
+            bead_ids = tuple(
+                _id for i, _id in enumerate(self._movable_bead_ids)
+                if clustering.labels_[i] == label
+            )
+            label_coords = np.array([
+                self._position_matrix.T[i] for i in bead_ids
+            ])
+            label_centroid = np.divide(
+                label_coords.sum(axis=0), len(bead_ids)
+            )
+            max_label_distance = max([
+                euclidean(i, label_centroid)
+                for i in label_coords
+            ])
+            windows.append(max_label_distance)
+
         return windows
 
     def write_properties(self, path: str, potential: float) -> None:
