@@ -21,9 +21,9 @@ Algorithm
 
 Very simple algorithm:
 
-1. Define a sphere of radius 0.1 Angstrom at the centroid of the host with equally placed beads on the sphere. The number of beads is defined by the `host.get_maximum_diameter()`.
+1. Define a sphere of radius 0.1 Angstrom at the centroid of the host with equally placed beads on the sphere. The number of beads is defined by the ``host.get_maximum_diameter()``.
 
-    * Beads have `sigma`, which define their radius, and the resolution of the calculation.
+    * Beads have ``sigma``, which define their radius, and the resolution of the calculation.
     * Hosts have atoms, which have radii defined by Streussel atomic radii [citation]
 
 2. Define steps of inflation (simply moving each bead in the blob along a vector emanating from the centroid) at even step size from 0.1 Angstrom to maximum host radii.
@@ -36,13 +36,13 @@ A pore, and blob, have a series of analysis methods, including:
 
 * Measure of pore radii (based on distance to host) and volume (based on its convex hull).
 
-* Calculation of windows based on the blob (a Pore contains a Blob), where movable beads are clustered using `sklearn.cluster.MeanShift` [this may change and be improved] to calculate the number and size of windows.
+* Calculation of windows based on the blob (a Pore contains a Blob), where movable beads are clustered using ``sklearn.cluster.MeanShift`` [this may change and be improved] to calculate the number and size of windows.
 
 Examples
 --------
 
-Two examples in ``examples/`` take `.xyz` files and either run the step-wise inflation (`inflate_blob`) or the single-step inflation (`get_inflated_blob`).
-The step-wise process will produce a plot and `.xyz` structures, monitoring the pore and blob, while the single-step will run the full calculation and produce just the final pore and blob.
+Two examples in ``examples/`` take ``.xyz`` files and either run the step-wise inflation (``inflate_blob``) or the single-step inflation (``get_inflated_blob``).
+The step-wise process will produce a plot and ``.xyz`` structures, monitoring the pore and blob, while the single-step will run the full calculation and produce just the final pore and blob.
 
 Contributors and Acknowledgements
 ---------------------------------
