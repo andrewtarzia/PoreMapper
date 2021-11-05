@@ -60,3 +60,9 @@ def rotation_matrix_arbitrary_axis(angle, axis):
         [e21, e22, e23],
         [e31, e32, e33]
     ])).as_matrix()
+
+def get_tensor_eigenvalues(T, sort=False):
+    if sort:
+        return (sorted(np.linalg.eigvals(T), reverse=True))
+    else:
+        return (np.linalg.eigvals(T))

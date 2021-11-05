@@ -19,6 +19,7 @@ import json
 
 from .bead import Bead
 from .blob import Blob
+from .utilities import get_tensor_eigenvalues
 
 
 @dataclass
@@ -115,66 +116,6 @@ class Pore:
             dtype=np.float64,
         )
         return pore
-
-    def with_blob(
-        self,
-        blob: Blob,
-    ) -> Pore:
-        """
-        Return a clone with a new Blob.
-
-        Parameters:
-
-            blob:
-                The blob to be applied.
-
-        """
-
-        return Pore.init(
-            blob=blob,
-            num_beads=self._num_beads,
-            sigma=self._sigma,
-            beads=self._beads,
-            position_matrix=self._position_matrix.T,
-        )
-
-    def with_new_pore(
-        self,
-        pore: Pore,
-    ) -> Pore:
-        """
-        Return a clone with a new pore.
-
-        Parameters:
-
-            pore:
-                The pore to be applied.
-
-        """
-
-        # Place new beads.
-        old_num_beads = len(self._beads)
-        pore_num_beads = pore.get_num_beads()
-        new_beads = tuple(
-            Bead(id=i, sigma=self._sigma)
-            for i in range(old_num_beads+pore_num_beads)
-        )
-
-        if old_num_beads == 0:
-            new_position_matrix = pore.get_position_matrix()
-        else:
-            new_position_matrix = np.vstack([
-                self._position_matrix.T,
-                pore.get_position_matrix(),
-            ])
-        new_num_beads = len(new_beads)
-        return Pore.init(
-            blob=self._blob,
-            num_beads=new_num_beads,
-            sigma=self._sigma,
-            beads=new_beads,
-            position_matrix=new_position_matrix,
-        )
 
     def get_blob(self) -> Blob:
         return self._blob
@@ -311,6 +252,93 @@ class Pore:
 
     def get_windows(self) -> abc.Iterable[float]:
         return self._blob.get_windows()
+
+    def get_gyration_tensor(self) -> np.ndarray:
+        """
+        Return the gyration tensor of a pore.
+
+        This code is from pyWindow.
+
+        The gyration tensor should be invariant to the molecule's
+        position. The known formulas for the gyration tensor have the
+        correction for the centre of mass of the molecule, therefore,
+        the coordinates are first corrected for the centre of mass and
+        essentially shifted to the origin.
+
+        Returns:
+
+            The gyration tensor of a molecule invariant to the
+            molecule's position.
+
+        """
+
+        coordinates = self.get_position_matrix()
+        # Calculate diagonal and then other values of the matrix.
+        diag = np.sum(coordinates**2, axis=0)
+        xy = np.sum(coordinates[:, 0] * coordinates[:, 1])
+        xz = np.sum(coordinates[:, 0] * coordinates[:, 2])
+        yz = np.sum(coordinates[:, 1] * coordinates[:, 2])
+        S = np.array([
+            [diag[0], xy, xz],
+            [xy, diag[1], yz],
+            [xz, yz, diag[2]]
+        ]) / coordinates.shape[0]
+        return (S)
+
+    def get_inertia_tensor(self) -> np.ndarray:
+        """
+        Return the tensor of inertia a molecule.
+
+        Returns:
+
+            The tensor of inertia of a molecule.
+
+        """
+
+        coordinates = self.get_position_matrix()
+        pow2 = coordinates**2
+
+        diag_1 = np.sum((pow2[:, 1] + pow2[:, 2]))
+        diag_2 = np.sum((pow2[:, 0] + pow2[:, 2]))
+        diag_3 = np.sum((pow2[:, 0] + pow2[:, 1]))
+
+        mxy = np.sum(-1 * coordinates[:, 0] * coordinates[:, 1])
+        mxz = np.sum(-1 * coordinates[:, 0] * coordinates[:, 2])
+        myz = np.sum(-1 * coordinates[:, 1] * coordinates[:, 2])
+
+        inertia_tensor = np.array(
+            [
+                [diag_1, mxy, mxz],
+                [mxy, diag_2, myz],
+                [mxz, myz, diag_3],
+            ]
+        ) / coordinates.shape[0]
+        return (inertia_tensor)
+
+    def get_asphericity(self):
+        S = get_tensor_eigenvalues(
+            T=self.get_inertia_tensor(),
+            sort=True,
+        )
+        return (S[0] - (S[1] + S[2]) / 2)
+
+
+    def get_acylindricity(self):
+        S = get_tensor_eigenvalues(
+            T=self.get_inertia_tensor(),
+            sort=True,
+        )
+        return (S[1] - S[2])
+
+
+    def get_relative_shape_anisotropy(self):
+        S = get_tensor_eigenvalues(
+            T=self.get_inertia_tensor(),
+            sort=True,
+        )
+        return (1 - 3 * (
+            (S[0] * S[1] + S[0] * S[2] + S[1] * S[2]) / (np.sum(S)
+        )**2))
 
     def write_properties(self, path: str, potential: float) -> None:
         """

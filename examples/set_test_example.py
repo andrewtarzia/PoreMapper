@@ -30,13 +30,16 @@ def run_calculation(prefix):
         f'num_windows: {len(windows)}\n'
         f'max_window_size: {max(windows)}\n'
         f'min_window_size: {min(windows)}\n'
+        f'asphericity: {pore.get_asphericity()}\n'
+        f'acylindricity: {pore.get_acylindricity()}\n'
+        f'shape anisotropy: {pore.get_relative_shape_anisotropy()}\n'
     )
     print()
 
     # Do final structure.
     host.write_xyz_file(f'min_example_output/{prefix}_final.xyz')
     blob.write_xyz_file(f'min_example_output/{prefix}_blob_final.xyz')
-    pore.write_xyz_file(f'min_example_output/{prefix}_pore_total.xyz')
+    pore.write_xyz_file(f'min_example_output/{prefix}_pore_final.xyz')
 
 
 def main():

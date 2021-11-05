@@ -51,10 +51,14 @@ def run_calculation(prefix):
             'pore_max_rad': pore.get_maximum_distance_to_com(),
             'pore_mean_rad': pore.get_mean_distance_to_com(),
             'pore_volume': pore.get_volume(),
+            'pore_volume': pore.get_volume(),
             'num_windows': len(windows),
             'max_window_size': max(windows),
             'avg_window_size': average(windows),
             'min_window_size': min(windows),
+            'asphericity': pore.get_asphericity(),
+            'acylindricity': pore.get_acylindricity(),
+            'shape_anisotropy': pore.get_relative_shape_anisotropy(),
         }
 
     # Do final structure.
@@ -84,7 +88,7 @@ def plot(properties, pywindow, filename):
 
     pw_pore_diameter = pywindow['pore_diameter_opt']['diameter']
 
-    fig, ax = plt.subplots(4, 1, sharex=True, figsize=(8, 8))
+    fig, ax = plt.subplots(5, 1, sharex=True, figsize=(8, 10))
     ax[0].plot(
         [i for i in properties],
         [properties[i]['num_movable_beads'] for i in properties],
@@ -155,6 +159,31 @@ def plot(properties, pywindow, filename):
     ax[2].tick_params(axis='both', which='major', labelsize=16)
     ax[2].set_ylabel(r'window rad. [$\mathrm{\AA}$]', fontsize=16)
     ax[2].legend(fontsize=16, ncol=3)
+
+    ax[3].plot(
+        [i for i in properties],
+        [properties[i]['asphericity'] for i in properties],
+        c='k',
+        lw=2,
+        label='asphericity',
+    )
+    ax[3].plot(
+        [i for i in properties],
+        [properties[i]['shape_anisotropy'] for i in properties],
+        c='b',
+        lw=2,
+        label='rel. shape anisotropy',
+    )
+    ax[3].plot(
+        [i for i in properties],
+        [properties[i]['acylindricity'] for i in properties],
+        c='r',
+        lw=2,
+        label='acylindricity',
+    )
+    ax[3].tick_params(axis='both', which='major', labelsize=16)
+    ax[3].set_ylabel('value', fontsize=16)
+    ax[3].legend(fontsize=16)
 
     # ax[-1].plot(
     #     [i for i in blob_properties],
