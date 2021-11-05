@@ -42,12 +42,6 @@ class Inflater:
 
         self._bead_sigma = bead_sigma
 
-    def _get_distances(self, host: Host, blob: Blob) -> np.ndarray:
-        return cdist(
-            host.get_position_matrix(),
-            blob.get_position_matrix(),
-        )
-
     def _check_steric(
         self,
         host: Host,
