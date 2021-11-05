@@ -8,7 +8,7 @@ class CaseData:
     host: rg.Host
     atoms: tuple
     num_atoms: int
-    maximum_diameter: int
+    maximum_diameter: float
     position_matrix1: np.ndarray
     centroid1: np.ndarray
     centroid2: np.ndarray

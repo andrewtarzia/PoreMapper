@@ -10,7 +10,7 @@ class CaseData:
     movable_bead_ids2: tuple
     sigma: float
     num_beads: int
-    maximum_diameter: int
+    maximum_diameter: float
     position_matrix1: np.ndarray
     position_matrix2: np.ndarray
     centroid1: np.ndarray
