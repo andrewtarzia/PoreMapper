@@ -27,11 +27,11 @@ Very simple algorithm:
     2. Define steps of inflation (simply moving each bead in the blob along a vector emanating from the centroid) at even step size from 0.1 Angstrom to maximum host radii.
     3. For each step, check if a bead will collide with the host (based on distance-(bead radii + atom radii)). If it collides, it becomes immovable and a pore bead. Else, continue on.
 
-A pore, and blob, have a series of analysis methods, including:
+A pore, and blob, have a series of analysis methods, including::
 
-    - Measures of pore shape based on the inertia tensor.
-    - Measure of pore radii (based on distance to host) and volume (based on its convex hull).
-    - Calculation of windows based on the blob (a Pore contains a Blob), where movable beads are clustered using `sklearn.cluster.MeanShift` [this may change and be improved] to calculate the number and size of windows.
+ * Measures of pore shape based on the inertia tensor.
+ * Measure of pore radii (based on distance to host) and volume (based on its convex hull).
+ * Calculation of windows based on the blob (a Pore contains a Blob), where movable beads are clustered using `sklearn.cluster.MeanShift` [this may change and be improved] to calculate the number and size of windows.
 
 Examples
 --------
