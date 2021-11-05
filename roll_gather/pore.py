@@ -261,38 +261,6 @@ class Pore:
     def get_windows(self) -> abc.Iterable[float]:
         return self._blob.get_windows()
 
-    def get_gyration_tensor(self) -> np.ndarray:
-        """
-        Return the gyration tensor of a pore.
-
-        This code is from pyWindow.
-
-        The gyration tensor should be invariant to the molecule's
-        position. The known formulas for the gyration tensor have the
-        correction for the centre of mass of the molecule, therefore,
-        the coordinates are first corrected for the centre of mass and
-        essentially shifted to the origin.
-
-        Returns:
-
-            The gyration tensor of a molecule invariant to the
-            molecule's position.
-
-        """
-
-        coordinates = self.get_position_matrix()
-        # Calculate diagonal and then other values of the matrix.
-        diag = np.sum(coordinates**2, axis=0)
-        xy = np.sum(coordinates[:, 0] * coordinates[:, 1])
-        xz = np.sum(coordinates[:, 0] * coordinates[:, 2])
-        yz = np.sum(coordinates[:, 1] * coordinates[:, 2])
-        S = np.array([
-            [diag[0], xy, xz],
-            [xy, diag[1], yz],
-            [xz, yz, diag[2]]
-        ]) / coordinates.shape[0]
-        return (S)
-
     def get_inertia_tensor(self) -> np.ndarray:
         """
         Return the tensor of inertia a molecule.
