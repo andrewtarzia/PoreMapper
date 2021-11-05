@@ -127,26 +127,12 @@ class Inflater:
             # Stop.
             blob_maximum_diameter = blob.get_maximum_diameter()
             if blob_maximum_diameter > host_maximum_diameter:
-                step_result = InflationStepResult(
-                    step=step,
-                    num_movable_beads=num_movable_beads,
-                    blob=blob,
-                    pore=pore,
-                )
-                yield step_result
                 print(
                     f'Pop! breaking at step: {step} with blob larger '
                     'than host'
                 )
                 break
             if len(movable_bead_ids) == 0:
-                step_result = InflationStepResult(
-                    step=step,
-                    num_movable_beads=num_movable_beads,
-                    blob=blob,
-                    pore=pore,
-                )
-                yield step_result
                 print(
                     f'breaking at step: {step} with no more moveable '
                     'beads'
@@ -206,6 +192,14 @@ class Inflater:
                 pore=pore,
             )
             yield step_result
+
+        step_result = InflationStepResult(
+            step=step,
+            num_movable_beads=num_movable_beads,
+            blob=blob,
+            pore=pore,
+        )
+        yield step_result
 
     def get_inflated_blob(
         self,
