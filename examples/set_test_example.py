@@ -49,7 +49,7 @@ def main():
 
     names = (
         'cc3', 'moc2', 'moc1', 'hogrih_cage',
-        'hogsoo_cage', 'yamashina_cage_'
+        'hogsoo_cage', 'hogsii_cage', 'yamashina_cage_'
     )
 
     for prefix in names:

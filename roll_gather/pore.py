@@ -238,7 +238,15 @@ class Pore:
         if self.get_num_beads() < 4:
             return 0.
         else:
-            return ConvexHull(self._position_matrix.T).volume
+            # Scale the positions to include radii of bead.
+            coordinates = self.get_position_matrix()
+            lengths_ = np.linalg.norm(coordinates, axis=1)
+            lengths_and = lengths_ + self._sigma
+            scales_ = lengths_and/lengths_
+            coordinates = self.get_position_matrix()*scales_.reshape(
+                len(coordinates), 1
+            )
+            return ConvexHull(coordinates).volume
 
     def get_properties(self) -> PoreProperties:
 
