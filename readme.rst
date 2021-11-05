@@ -34,7 +34,9 @@ Very simple algorithm:
 A pore, and blob, have a series of analysis methods, including:
 
 * Measures of pore shape based on the inertia tensor.
+
 * Measure of pore radii (based on distance to host) and volume (based on its convex hull).
+
 * Calculation of windows based on the blob (a Pore contains a Blob), where movable beads are clustered using `sklearn.cluster.MeanShift` [this may change and be improved] to calculate the number and size of windows.
 
 Examples
