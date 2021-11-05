@@ -24,13 +24,7 @@ from .bead import Bead
 
 @dataclass
 class BlobProperties:
-    """
-    Data of a blob.
-
-    """
-
     num_beads: int
-    potential: float
     maximum_diameter: float
 
 
@@ -75,21 +69,6 @@ class Blob:
             position_matrix.T,
             dtype=np.float64,
         )
-
-    @classmethod
-    def init_empty(cls) -> Blob:
-        """
-        Initalise an empty Blob.
-
-        """
-
-        blob = cls.__new__(cls)
-        blob._num_beads = 0
-        blob._sigma = 0
-        blob._beads = ()
-        blob._movable_bead_ids = ()
-        blob._position_matrix = ()
-        return blob
 
     @classmethod
     def init_from_idealised_geometry(
@@ -320,11 +299,10 @@ class Blob:
         coords = self._position_matrix
         return float(euclidean(coords.min(axis=1), coords.max(axis=1)))
 
-    def get_properties(self, potential: float) -> BlobProperties:
+    def get_properties(self) -> BlobProperties:
 
         return BlobProperties(
             num_beads=self._num_beads,
-            potential=potential,
             maximum_diameter=self.get_maximum_diameter(),
         )
 

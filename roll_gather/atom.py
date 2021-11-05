@@ -40,6 +40,7 @@ class Atom:
         Get atom ID.
 
         """
+
         return self._id
 
     def get_element_string(self):
@@ -47,6 +48,7 @@ class Atom:
         Get atom element symbol.
 
         """
+
         return self._element_string
 
     def get_radii(self):
@@ -54,6 +56,7 @@ class Atom:
         Get atomic radii (STREUSEL).
 
         """
+
         return self._radii
 
 
@@ -61,4 +64,7 @@ class Atom:
         return repr(self)
 
     def __repr__(self):
-        return f'{self.get_element_string()}(id={self.get_id()}, radii={self._radii})'
+        return (
+            f'{self.get_element_string()}('
+            f'id={self.get_id()}, radii={self._radii})'
+        )
