@@ -23,6 +23,7 @@ def test_host_get_atoms(case_data):
     for test, atom in zip(case_data.host.get_atoms(), case_data.atoms):
         assert test.get_id() == atom.get_id()
         assert test.get_element_string() == atom.get_element_string()
+        assert test.get_radii() == atom.get_radii()
 
 
 def test_host_get_centroid(case_data):
