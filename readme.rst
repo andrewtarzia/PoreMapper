@@ -21,7 +21,7 @@ Algorithm
 
 Very simple algorithm:
 
-1. Define a sphere of radius 0.1 Angstrom at the centroid of the host with equally placed beads on the sphere. The number of beads is defined by the ``host.get_maximum_diameter()``.
+1. Define a sphere of radius 0.1 Angstrom at the centroid of the host with equally placed beads on the sphere. The number of beads is defined by the ``host.get_maximum_diameter()``
 
     * Beads have ``sigma``, which define their radius, and the resolution of the calculation.
     * Hosts have atoms, which have radii defined by Streussel atomic radii [citation]
