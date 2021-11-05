@@ -213,6 +213,9 @@ class Blob:
         displacement = position-centroid
         return self.with_displacement(displacement)
 
+    def get_movable_bead_ids(self):
+        return self._movable_bead_ids
+
     def with_movable_bead_ids(
         self,
         movable_bead_ids: abc.Iterable[int],

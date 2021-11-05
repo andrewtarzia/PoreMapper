@@ -33,32 +33,3 @@ def case_data(request):
         centroid1=centroid1,
         centroid2=centroid2,
     )
-
-
-
-
-@pytest.fixture
-def host(atoms, position_matrix):
-    return rg.Host(
-        atoms=atoms,
-        position_matrix=position_matrix,
-    )
-
-
-
-
-
-
-
-
-@pytest.fixture
-def final_pos_mat():
-    return np.array([
-        [0.29028551,  1.12756372, -1.21825898],
-        [1.23559041,  2.11685589,  0.89545513]
-    ])
-
-
-@pytest.fixture
-def spinner():
-    return rg.Inflater(bead_sigma=1.0)
