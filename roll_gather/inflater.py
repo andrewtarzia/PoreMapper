@@ -99,11 +99,15 @@ class Inflater:
         """
 
         starting_radius = 0.1
-        num_steps = 50
+        num_steps = 100
 
         # Move host to origin.
         host = host.with_centroid([0., 0., 0.])
+        host_pos_mat = host.get_position_matrix()
         host_maximum_diameter = host.get_maximum_diameter()
+        host_radii_arr = np.array([
+            i.get_radii() for i in host.get_atoms()
+        ]).reshape(1, host.get_num_atoms())
 
         # Get num beads and step size based on maximum diameter of
         # host. Using pyWindow code.
@@ -139,47 +143,52 @@ class Inflater:
                 )
                 break
 
-            for bead in blob.get_beads():
-                if bead.get_id() not in movable_bead_ids:
-                    continue
-                centroid = blob.get_centroid()
-                pos_mat = blob.get_position_matrix()
-                # Perform translation.
-                com_to_bead = pos_mat[bead.get_id()] - centroid
-                com_to_bead /= np.linalg.norm(com_to_bead)
-                translation_vector = step_size * -com_to_bead
-                new_blob = self._translate_beads_along_vector(
-                    blob=blob,
-                    vector=translation_vector,
-                    bead_id=bead.get_id(),
-                )
+            pos_mat = blob.get_position_matrix()
 
-                # Check for steric hit.
-                if_steric_clash = self._check_steric(
-                    host=host,
-                    blob=new_blob,
-                    bead=bead,
-                )
-                # If, do not update blob.
-                if if_steric_clash:
-                    movable_bead_ids.remove(bead.get_id())
-                    blob = blob.with_movable_bead_ids(
-                        movable_bead_ids=movable_bead_ids,
-                    )
-                else:
-                    blob = blob.with_position_matrix(
-                        position_matrix=new_blob.get_position_matrix(),
-                    )
+            # Check for steric clashes.
+            # Get host-blob distances.
+            pair_dists = cdist(pos_mat, host_pos_mat)
+            # Include host atom radii.
+            pair_dists += -host_radii_arr
+            min_pair_dists = np.min(pair_dists, axis=1)
+            # Update movable array.
+            movable_bead_arr = np.where(
+                min_pair_dists < self._bead_sigma, 0, 1
+            ).reshape(num_beads, 1)
+
+            # And ids.
+            movable_bead_ids = set(
+                np.argwhere(movable_bead_arr==1)[:, 0]
+            )
+            # Update blob.
+            blob = blob.with_movable_bead_ids(
+                movable_bead_ids=movable_bead_ids,
+            )
+
+            # Define step array based on collisions.
+            step_arr = movable_bead_arr * step_size
+            # Get translations.
+            translation_mat = step_arr * (
+                pos_mat / np.linalg.norm(
+                    x=pos_mat,
+                    axis=1,
+                ).reshape(num_beads, 1)
+            )
+            new_pos_mat = pos_mat + translation_mat
+
+            # Do move.
+            blob = blob.with_position_matrix(new_pos_mat)
 
             num_movable_beads = len(movable_bead_ids)
-            if num_movable_beads == blob.get_num_beads():
+            if num_movable_beads < 0.6*blob.get_num_beads():
                 nonmovable_bead_ids = [
                     i.get_id() for i in blob.get_beads()
+                    if i.get_id() not in movable_bead_ids
                 ]
             else:
                 nonmovable_bead_ids = [
                     i.get_id() for i in blob.get_beads()
-                    if i.get_id() not in movable_bead_ids
+                    # if i.get_id() not in movable_bead_ids
                 ]
             pore = Pore(
                 blob=blob,
