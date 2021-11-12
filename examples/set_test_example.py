@@ -1,5 +1,6 @@
 import os
 import roll_gather as rg
+import time
 
 
 def run_calculation(prefix):
@@ -8,11 +9,13 @@ def run_calculation(prefix):
     host = host.with_centroid([0., 0., 0.])
 
     # Define calculator object.
-    calculator = rg.Inflater(bead_sigma=1.0)
+    calculator = rg.Inflater(bead_sigma=1.2)
 
     # Run calculator on host object, analysing output.
     print(f'doing {prefix}')
+    stime = time.time()
     final_result = calculator.get_inflated_blob(host=host)
+    print(f'run time: {time.time() - stime}')
     pore = final_result.pore
     blob = final_result.pore.get_blob()
     windows = pore.get_windows()

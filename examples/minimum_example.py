@@ -3,6 +3,7 @@ from numpy.lib.function_base import average
 import roll_gather as rg
 import matplotlib.pyplot as plt
 import pywindow as pw
+import time
 
 
 def run_pywindow(prefix):
@@ -23,7 +24,10 @@ def run_calculation(prefix):
 
     # Run calculator on host object, analysing output.
     blob_properties = {}
+    stime = time.time()
+    stime2 = time.time()
     for step_result in calculator.inflate_blob(host=host):
+        print(f'step time: {time.time() - stime2}')
         print(step_result)
         print(
             f'step: {step_result.step}, '
@@ -60,7 +64,9 @@ def run_calculation(prefix):
             'acylindricity': pore.get_acylindricity(),
             'shape_anisotropy': pore.get_relative_shape_anisotropy(),
         }
+        stime2 = time.time()
 
+    print(f'run time: {time.time() - stime}')
     # Do final structure.
     blob.write_xyz_file(
         f'min_example_output/{prefix}_blob_{step_result.step}.xyz'
