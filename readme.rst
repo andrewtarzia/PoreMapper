@@ -12,7 +12,7 @@ Please contact me with any questions (<andrew.tarzia@gmail.com>) or submit an is
 Installation
 ------------
 
-Clone this repository and `python setup.py develop` in this directory.
+Clone this repository and ``python setup.py develop`` in this directory.
 
 Algorithm
 ---------
