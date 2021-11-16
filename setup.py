@@ -1,16 +1,17 @@
 import setuptools
 
 setuptools.setup(
-    name="roll-and-gather",
+    name="PoreMapper",
     version="0.0.1",
     author="Andrew Tarzia",
     author_email="andrew.tarzia@gmail.com",
     description="Cavity size and shape evaluation by bead growth.",
-    url="https://github.com/andrewtarzia/roll-and-gather",
+    url="https://github.com/andrewtarzia/PoreMapper",
     packages=setuptools.find_packages(),
     install_requires=(
         'numpy',
         'scipy',
+        'sklearn',
     ),
     classifiers=[
         "Programming Language :: Python :: 3",

@@ -1,5 +1,5 @@
-pyBalloon
-=======
+PoreMapper
+==========
 
 :author: Andrew Tarzia
 
@@ -12,9 +12,7 @@ Please contact me with any questions (<andrew.tarzia@gmail.com>) or submit an is
 Installation
 ------------
 
-Install using pip:
-
-    pip install XX
+Clone this repository and `python setup.py develop` in this directory.
 
 Algorithm
 ---------

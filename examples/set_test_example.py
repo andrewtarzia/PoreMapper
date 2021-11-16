@@ -1,15 +1,15 @@
 import os
-import roll_gather as rg
+import pore_mapper as pm
 import time
 
 
 def run_calculation(prefix):
     # Read in host from xyz file.
-    host = rg.Host.init_from_xyz_file(path=f'{prefix}.xyz')
+    host = pm.Host.init_from_xyz_file(path=f'{prefix}.xyz')
     host = host.with_centroid([0., 0., 0.])
 
     # Define calculator object.
-    calculator = rg.Inflater(bead_sigma=1.2)
+    calculator = pm.Inflater(bead_sigma=1.2)
 
     # Run calculator on host object, analysing output.
     print(f'doing {prefix}')
