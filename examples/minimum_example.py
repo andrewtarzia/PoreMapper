@@ -61,7 +61,6 @@ def run_calculation(prefix):
             'avg_window_size': average(windows),
             'min_window_size': min(windows),
             'asphericity': pore.get_asphericity(),
-            'acylindricity': pore.get_acylindricity(),
             'shape_anisotropy': pore.get_relative_shape_anisotropy(),
         }
         stime2 = time.time()
@@ -180,17 +179,6 @@ def plot(properties, pywindow, filename):
         lw=2,
         label='rel. shape anisotropy',
     )
-    ax[3].plot(
-        [i for i in properties],
-        [properties[i]['acylindricity'] for i in properties],
-        c='r',
-        lw=2,
-        label='acylindricity',
-    )
-    ax[3].tick_params(axis='both', which='major', labelsize=16)
-    ax[3].set_ylabel('value', fontsize=16)
-    ax[3].legend(fontsize=16)
-
     # ax[-1].plot(
     #     [i for i in blob_properties],
     #     [blob_properties[i]['blob_max_diam'] for i in blob_properties],

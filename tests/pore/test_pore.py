@@ -43,10 +43,6 @@ def test_pore_get_asphericity(case_data):
     test = case_data.pore.get_asphericity()
     assert np.isclose(test, case_data.asphericity)
 
-def test_pore_get_acylindricity(case_data):
-    test = case_data.pore.get_acylindricity()
-    assert np.isclose(test, case_data.acylindricity)
-
 def test_pore_get_relative_shape_anisotropy(case_data):
     test = case_data.pore.get_relative_shape_anisotropy()
     assert np.isclose(test, case_data.relative_shape_anisotropy)

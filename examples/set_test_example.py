@@ -34,7 +34,6 @@ def run_calculation(prefix):
         f'max_window_size: {max(windows)}\n'
         f'min_window_size: {min(windows)}\n'
         f'asphericity: {pore.get_asphericity()}\n'
-        f'acylindricity: {pore.get_acylindricity()}\n'
         f'shape anisotropy: {pore.get_relative_shape_anisotropy()}\n'
     )
     print()

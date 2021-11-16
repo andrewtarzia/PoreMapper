@@ -30,6 +30,7 @@ class PoreProperties:
     volume: float
     windows: abc.Iterable[float]
 
+
 class Pore:
     """
     Representation of a Pore containing beads and positions.
@@ -297,15 +298,6 @@ class Pore:
             sort=True,
         )
         return (S[0] - (S[1] + S[2]) / 2)
-
-
-    def get_acylindricity(self):
-        S = get_tensor_eigenvalues(
-            T=self.get_inertia_tensor(),
-            sort=True,
-        )
-        return (S[1] - S[2])
-
 
     def get_relative_shape_anisotropy(self):
         S = get_tensor_eigenvalues(
