@@ -179,6 +179,10 @@ def plot(properties, pywindow, filename):
         lw=2,
         label='rel. shape anisotropy',
     )
+    ax[3].tick_params(axis='both', which='major', labelsize=16)
+    ax[3].set_ylabel('measure', fontsize=16)
+    ax[3].legend(fontsize=16)
+
     # ax[-1].plot(
     #     [i for i in blob_properties],
     #     [blob_properties[i]['blob_max_diam'] for i in blob_properties],
