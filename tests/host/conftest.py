@@ -1,11 +1,11 @@
 import pytest
 import numpy as np
-import roll_gather as rg
+import pore_mapper as pm
 from dataclasses import dataclass
 
 @dataclass
 class CaseData:
-    host: rg.Host
+    host: pm.Host
     atoms: tuple
     num_atoms: int
     maximum_diameter: float
@@ -15,14 +15,14 @@ class CaseData:
 
 @pytest.fixture
 def case_data(request):
-    atoms = (rg.Atom(0, 'C'), rg.Atom(1, 'C'))
+    atoms = (pm.Atom(0, 'C'), pm.Atom(1, 'C'))
     position_matrix1 = np.array([[0, 0, 0], [0, 1.5, 0]])
     maximum_diameter = 1.5
     centroid1 = np.array([0., 0.75, 0.])
     centroid2 = np.array([0., 0., 0.])
     num_atoms = 2
     return CaseData(
-        host=rg.Host(
+        host=pm.Host(
             atoms=atoms,
           position_matrix=position_matrix1,
         ),

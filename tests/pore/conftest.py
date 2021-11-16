@@ -1,11 +1,11 @@
 import pytest
 import numpy as np
-import roll_gather as rg
+import pore_mapper as pm
 from dataclasses import dataclass
 
 @dataclass
 class CaseData:
-    pore: rg.Pore
+    pore: pm.Pore
     nonmovable_bead_ids1: tuple
     sigma: float
     num_beads: int
@@ -25,7 +25,7 @@ def case_data(request):
     mean_distance_to_com = 0.960866
     nonmovable_bead_ids1 = (0, 1, 2, 3, 7, 8)
     num_beads = len(nonmovable_bead_ids1)
-    blob = rg.Blob.init_from_idealised_geometry(
+    blob = pm.Blob.init_from_idealised_geometry(
         bead_sigma=1.3,
         num_beads=10,
         sphere_radius=0.1,
@@ -49,7 +49,7 @@ def case_data(request):
         [ 0.00571956, -0.05770473,  0.60333333],
     ])
     return CaseData(
-        pore=rg.Pore(blob, nonmovable_bead_ids1),
+        pore=pm.Pore(blob, nonmovable_bead_ids1),
         sigma=sigma,
         volume=volume,
         nonmovable_bead_ids1=nonmovable_bead_ids1,

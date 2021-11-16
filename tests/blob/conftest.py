@@ -1,11 +1,11 @@
 import pytest
 import numpy as np
-import roll_gather as rg
+import pore_mapper as pm
 from dataclasses import dataclass
 
 @dataclass
 class CaseData:
-    blob: rg.Blob
+    blob: pm.Blob
     movable_bead_ids1: tuple
     movable_bead_ids2: tuple
     sigma: float
@@ -39,7 +39,7 @@ def case_data(request):
     movable_bead_ids2 = (0, 2, 7)
     windows = [0. for i in movable_bead_ids2]
     return CaseData(
-        blob=rg.Blob.init_from_idealised_geometry(
+        blob=pm.Blob.init_from_idealised_geometry(
             bead_sigma=1.3,
             num_beads=num_beads,
             sphere_radius=0.1,
