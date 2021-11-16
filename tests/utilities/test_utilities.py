@@ -1,5 +1,5 @@
 import pytest
-from roll_gather import get_tensor_eigenvalues
+from pore_mapper import get_tensor_eigenvalues
 import numpy as np
 
 
