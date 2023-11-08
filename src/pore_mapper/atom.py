@@ -59,12 +59,11 @@ class Atom:
 
         return self._radii
 
-
     def __str__(self):
         return repr(self)
 
     def __repr__(self):
         return (
-            f'{self.get_element_string()}('
-            f'id={self.get_id()}, radii={self._radii})'
+            f"{self.get_element_string()}("
+            f"id={self.get_id()}, radii={self._radii})"
         )

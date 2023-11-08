@@ -9,13 +9,14 @@ Pore class for optimisation.
 """
 
 from __future__ import annotations
-from collections import abc
 
-from dataclasses import dataclass, asdict
+import json
+from collections import abc
+from dataclasses import asdict, dataclass
+
 import numpy as np
 from scipy.spatial import ConvexHull
 from scipy.spatial.distance import euclidean
-import json
 
 from .bead import Bead
 from .blob import Blob
@@ -145,8 +146,7 @@ class Pore:
 
         n_beads = len(self._beads)
         return np.divide(
-            self._position_matrix[:, range(n_beads)].sum(axis=1),
-            n_beads
+            self._position_matrix[:, range(n_beads)].sum(axis=1), n_beads
         )
 
     def get_num_beads(self) -> int:
@@ -179,11 +179,9 @@ class Pore:
         content = [0]
         for i, bead in enumerate(self.get_beads(), 1):
             x, y, z = (i for i in coords[bead.get_id()])
-            content.append(
-                f'B {x:f} {y:f} {z:f}\n'
-            )
+            content.append(f"B {x:f} {y:f} {z:f}\n")
         # Set first line to the atom_count.
-        content[0] = f'{i}\nPore!\n'
+        content[0] = f"{i}\nPore!\n"
 
         return content
 
@@ -195,9 +193,8 @@ class Pore:
 
         content = self._write_xyz_content()
 
-        with open(path, 'w') as f:
-            f.write(''.join(content))
-
+        with open(path, "w") as f:
+            f.write("".join(content))
 
     def get_mean_distance_to_com(self) -> float:
         """
@@ -208,10 +205,12 @@ class Pore:
 
         """
 
-        return np.mean([
-            euclidean(i, self.get_centroid())
-            for i in self._position_matrix.T
-        ])
+        return np.mean(
+            [
+                euclidean(i, self.get_centroid())
+                for i in self._position_matrix.T
+            ]
+        )
 
     def get_maximum_distance_to_com(self) -> float:
         """
@@ -222,10 +221,12 @@ class Pore:
 
         """
 
-        return max((
-            euclidean(i, self.get_centroid())
-            for i in self._position_matrix.T
-        ))
+        return max(
+            (
+                euclidean(i, self.get_centroid())
+                for i in self._position_matrix.T
+            )
+        )
 
     def get_volume(self) -> float:
         """
@@ -237,20 +238,19 @@ class Pore:
         """
 
         if self.get_num_beads() < 4:
-            return 0.
+            return 0.0
         else:
             # Scale the positions to include radii of bead.
             coordinates = self.get_position_matrix()
             lengths_ = np.linalg.norm(coordinates, axis=1)
             lengths_and = lengths_ + self._sigma
-            scales_ = lengths_and/lengths_
-            coordinates = self.get_position_matrix()*scales_.reshape(
+            scales_ = lengths_and / lengths_
+            coordinates = self.get_position_matrix() * scales_.reshape(
                 len(coordinates), 1
             )
             return ConvexHull(coordinates).volume
 
     def get_properties(self) -> PoreProperties:
-
         return PoreProperties(
             num_beads=self._num_beads,
             max_dist_to_com=self.get_max_dist_to_com(),
@@ -283,30 +283,33 @@ class Pore:
         mxz = np.sum(-1 * coordinates[:, 0] * coordinates[:, 2])
         myz = np.sum(-1 * coordinates[:, 1] * coordinates[:, 2])
 
-        inertia_tensor = np.array(
-            [
-                [diag_1, mxy, mxz],
-                [mxy, diag_2, myz],
-                [mxz, myz, diag_3],
-            ]
-        ) / coordinates.shape[0]
-        return (inertia_tensor)
+        inertia_tensor = (
+            np.array(
+                [
+                    [diag_1, mxy, mxz],
+                    [mxy, diag_2, myz],
+                    [mxz, myz, diag_3],
+                ]
+            )
+            / coordinates.shape[0]
+        )
+        return inertia_tensor
 
     def get_asphericity(self):
         S = get_tensor_eigenvalues(
             T=self.get_inertia_tensor(),
             sort=True,
         )
-        return (S[0] - (S[1] + S[2]) / 2)
+        return S[0] - (S[1] + S[2]) / 2
 
     def get_relative_shape_anisotropy(self):
         S = get_tensor_eigenvalues(
             T=self.get_inertia_tensor(),
             sort=True,
         )
-        return (1 - 3 * (
-            (S[0] * S[1] + S[0] * S[2] + S[1] * S[2]) / (np.sum(S)
-        )**2))
+        return 1 - 3 * (
+            (S[0] * S[1] + S[0] * S[2] + S[1] * S[2]) / (np.sum(S)) ** 2
+        )
 
     def write_properties(self, path: str, potential: float) -> None:
         """
@@ -314,13 +317,11 @@ class Pore:
 
         """
 
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             json.dump(asdict(self.get_properties(potential)), f)
 
     def __str__(self):
         return repr(self)
 
     def __repr__(self):
-        return (
-            f'{self.__class__.__name__}({self._num_beads} beads)'
-        )
+        return f"{self.__class__.__name__}({self._num_beads} beads)"

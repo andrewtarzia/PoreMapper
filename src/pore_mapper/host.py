@@ -9,13 +9,14 @@ Host class for calculation.
 """
 
 from __future__ import annotations
-from collections import abc
-import typing
 
+import typing
+from collections import abc
+
+import numpy as np
 from scipy.spatial.distance import euclidean
 
 from .atom import Atom
-import numpy as np
 
 
 class Host:
@@ -65,7 +66,7 @@ class Host:
 
         """
 
-        with open(path, 'r') as f:
+        with open(path, "r") as f:
             _, _, *content = f.readlines()
 
         atoms = []
@@ -138,9 +139,7 @@ class Host:
 
         """
 
-        new_position_matrix = (
-            self._position_matrix.T + displacement
-        )
+        new_position_matrix = self._position_matrix.T + displacement
         return Host(
             atoms=self._atoms,
             position_matrix=np.array(new_position_matrix),
@@ -166,9 +165,8 @@ class Host:
         """
 
         centroid = self.get_centroid()
-        displacement = position-centroid
+        displacement = position - centroid
         return self.with_displacement(displacement)
-
 
     def get_centroid(
         self,
@@ -198,16 +196,15 @@ class Host:
         if atom_ids is None:
             atom_ids = range(len(self._atoms))
         elif isinstance(atom_ids, int):
-            atom_ids = (atom_ids, )
+            atom_ids = (atom_ids,)
         elif not isinstance(atom_ids, (list, tuple)):
             atom_ids = list(atom_ids)
 
         if len(atom_ids) == 0:
-            raise ValueError('atom_ids was of length 0.')
+            raise ValueError("atom_ids was of length 0.")
 
         return np.divide(
-            self._position_matrix[:, atom_ids].sum(axis=1),
-            len(atom_ids)
+            self._position_matrix[:, atom_ids].sum(axis=1), len(atom_ids)
         )
 
     def _write_xyz_content(self):
@@ -219,11 +216,9 @@ class Host:
         content = [0]
         for i, atom in enumerate(self.get_atoms(), 1):
             x, y, z = (i for i in coords[atom.get_id()])
-            content.append(
-                f'{atom.get_element_string()} {x:f} {y:f} {z:f}\n'
-            )
+            content.append(f"{atom.get_element_string()} {x:f} {y:f} {z:f}\n")
         # Set first line to the atom_count.
-        content[0] = f'{i}\n\n'
+        content[0] = f"{i}\n\n"
 
         return content
 
@@ -237,14 +232,14 @@ class Host:
 
         content = self._write_xyz_content()
 
-        with open(path, 'w') as f:
-            f.write(''.join(content))
+        with open(path, "w") as f:
+            f.write("".join(content))
 
     def __str__(self):
         return repr(self)
 
     def __repr__(self):
         return (
-            f'<{self.__class__.__name__}({len(self._atoms)} atoms) '
-            f'at {id(self)}>'
+            f"<{self.__class__.__name__}({len(self._atoms)} atoms) "
+            f"at {id(self)}>"
         )

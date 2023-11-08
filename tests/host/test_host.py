@@ -1,13 +1,13 @@
-import pytest
-import os
 import numpy as np
 
 
 def test_host_get_position_matrix(case_data):
-    assert np.all(np.allclose(
-        case_data.position_matrix1,
-        case_data.host.get_position_matrix(),
-    ))
+    assert np.all(
+        np.allclose(
+            case_data.position_matrix1,
+            case_data.host.get_position_matrix(),
+        )
+    )
 
 
 def test_host_get_maximum_diameter(case_data):
@@ -28,15 +28,19 @@ def test_host_get_atoms(case_data):
 
 def test_host_get_centroid(case_data):
     test = case_data.host.get_centroid()
-    assert np.all(np.allclose(
-        case_data.centroid1,
-        test,
-    ))
+    assert np.all(
+        np.allclose(
+            case_data.centroid1,
+            test,
+        )
+    )
 
 
 def test_host_with_centroid(case_data):
     test = case_data.host.with_centroid(case_data.centroid2)
-    assert np.all(np.allclose(
-        case_data.centroid2,
-        test.get_centroid(),
-    ))
+    assert np.all(
+        np.allclose(
+            case_data.centroid2,
+            test.get_centroid(),
+        )
+    )

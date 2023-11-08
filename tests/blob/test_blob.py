@@ -1,13 +1,13 @@
-import pytest
-import os
 import numpy as np
 
 
 def test_blob_get_position_matrix(case_data):
-    assert np.all(np.allclose(
-        case_data.position_matrix1,
-        case_data.blob.get_position_matrix(),
-    ))
+    assert np.all(
+        np.allclose(
+            case_data.position_matrix1,
+            case_data.blob.get_position_matrix(),
+        )
+    )
 
 
 def test_blob_get_sigma(case_data):
@@ -27,9 +27,7 @@ def test_blob_with_movable_bead_ids(case_data):
 
 
 def test_blob_get_windows(case_data):
-    test_blob = case_data.blob.with_position_matrix(
-        case_data.position_matrix2
-    )
+    test_blob = case_data.blob.with_position_matrix(case_data.position_matrix2)
     test_blob = test_blob.with_movable_bead_ids(
         case_data.movable_bead_ids2,
     )
@@ -45,10 +43,12 @@ def test_blob_get_num_beads(case_data):
 
 def test_blob_with_centroid(case_data):
     test = case_data.blob.with_centroid(case_data.centroid1)
-    assert np.all(np.allclose(
-        case_data.centroid1,
-        test.get_centroid(),
-    ))
+    assert np.all(
+        np.allclose(
+            case_data.centroid1,
+            test.get_centroid(),
+        )
+    )
 
 
 def test_blob_get_maximum_diameter(case_data):
@@ -57,12 +57,10 @@ def test_blob_get_maximum_diameter(case_data):
 
 
 def test_blob_with_position_matrix(case_data):
-    test = case_data.blob.with_position_matrix(
-        case_data.position_matrix2
+    test = case_data.blob.with_position_matrix(case_data.position_matrix2)
+    assert np.all(
+        np.allclose(
+            case_data.position_matrix2,
+            test.get_position_matrix(),
+        )
     )
-    assert np.all(np.allclose(
-        case_data.position_matrix2,
-        test.get_position_matrix(),
-    ))
-
-

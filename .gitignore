@@ -130,3 +130,18 @@ dmypy.json
 
 # Examples output.
 examples/min_example_output/
+
+.vscode
+/dist
+/build
+src/pore_mapper.egg-info
+src/pore_mapper/_version.py
+/.coverage
+docs/source/_autosummary
+
+**/__pycache__/
+
+**/.cache
+.mypy_cache
+*.ipynb_checkpoints
+**/.vscode
