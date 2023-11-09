@@ -1,23 +1,45 @@
 import os
-import time
 
 import numpy as np
 import pore_mapper as pm
+import stk
 
 
-def run_calculation(prefix, pore_volume):
-    # Read in host from xyz file.
-    host = pm.Host.init_from_xyz_file(path=f"{prefix}.xyz")
-    host = host.with_centroid([0.0, 0.0, 0.0])
+def main():
+    if not os.path.exists("example_output"):
+        os.mkdir("example_output")
+
+    cage = stk.ConstructedMolecule(
+        topology_graph=stk.cage.FourPlusSix(
+            building_blocks=(
+                stk.BuildingBlock(
+                    smiles="NCCN",
+                    functional_groups=[stk.PrimaryAminoFactory()],
+                ),
+                stk.BuildingBlock(
+                    smiles="O=CC(C=O)C=O",
+                    functional_groups=[stk.AldehydeFactory()],
+                ),
+            ),
+            optimizer=stk.MCHammer(),
+        ),
+    )
+    host = pm.Host(
+        atoms=(
+            pm.Atom(id=i.get_id(), element_string=i.__class__.__name__)
+            for i in cage.get_atoms()
+        ),
+        position_matrix=cage.get_position_matrix(),
+    )
+
+    prefix = "stk"
 
     # Define calculator object.
     calculator = pm.Inflater(bead_sigma=1.2, centroid=host.get_centroid())
 
     # Run calculator on host object, analysing output.
     print(f"doing {prefix}")
-    stime = time.time()
     final_result = calculator.get_inflated_blob(host=host)
-    print(f"run time: {time.time() - stime}")
     pore = final_result.pore
     blob = final_result.pore.get_blob()
     windows = pore.get_windows()
@@ -33,10 +55,6 @@ def run_calculation(prefix, pore_volume):
         f"pore_mean_rad: {pore.get_mean_distance_to_com()}\n"
         f"pore_volume: {pore.get_volume()}\n"
         f"num_windows: {len(windows)}\n"
-        f"max_window_size: {max(windows)}\n"
-        f"min_window_size: {min(windows)}\n"
-        f"asphericity: {pore.get_asphericity()}\n"
-        f"shape anisotropy: {pore.get_relative_shape_anisotropy()}\n"
     )
     print()
 
@@ -46,26 +64,7 @@ def run_calculation(prefix, pore_volume):
     pore.write_xyz_file(f"example_output/{prefix}_pore_final.xyz")
 
     # A quick check for no changes.
-    print(pore.get_volume(), pore_volume)
-    assert np.isclose(pore.get_volume(), pore_volume, atol=1e-6, rtol=0)
-
-
-def main():
-    if not os.path.exists("example_output"):
-        os.mkdir("example_output")
-
-    names = (
-        ("cc3", 200.0827435501178),
-        ("moc2", 727.9224999790649),
-        ("moc1", 9.142119630617236),
-        ("hogrih_cage", 536.9120376447318),
-        ("hogsoo_cage", 1452.5658535480663),
-        ("hogsii_cage", 292.31476121263916),
-        ("yamashina_cage_", 1674.5016354156583),
-    )
-
-    for prefix, pore_volume in names:
-        run_calculation(prefix, pore_volume)
+    assert np.isclose(pore.get_volume(), 148.89022549492185, atol=1e-6, rtol=0)
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ def run_calculation(prefix):
     host = host.with_centroid([0.0, 0.0, 0.0])
 
     # Define calculator object.
-    calculator = pm.Inflater(bead_sigma=1.0)
+    calculator = pm.Inflater(bead_sigma=1.0, centroid=host.get_centroid())
 
     # Run calculator on host object, analysing output.
     blob_properties = {}
@@ -29,10 +29,10 @@ def run_calculation(prefix):
         blob = step_result.pore.get_blob()
         if step_result.step % 10 == 0:
             blob.write_xyz_file(
-                f"min_example_output/" f"{prefix}_blob_{step_result.step}.xyz"
+                f"example_output/" f"{prefix}_blob_{step_result.step}.xyz"
             )
             pore.write_xyz_file(
-                f"min_example_output/" f"{prefix}_pore_{step_result.step}.xyz"
+                f"example_output/" f"{prefix}_pore_{step_result.step}.xyz"
             )
 
         windows = pore.get_windows()
@@ -55,13 +55,10 @@ def run_calculation(prefix):
         stime2 = time.time()
 
     print(f"run time: {time.time() - stime}")
+
     # Do final structure.
-    blob.write_xyz_file(
-        f"min_example_output/{prefix}_blob_{step_result.step}.xyz"
-    )
-    pore.write_xyz_file(
-        f"min_example_output/{prefix}_pore_{step_result.step}.xyz"
-    )
+    blob.write_xyz_file(f"example_output/{prefix}_blob_{step_result.step}.xyz")
+    pore.write_xyz_file(f"example_output/{prefix}_pore_{step_result.step}.xyz")
 
     return blob_properties
 
@@ -175,8 +172,8 @@ def plot(properties, filename):
 
 
 def main():
-    if not os.path.exists("min_example_output"):
-        os.mkdir("min_example_output")
+    if not os.path.exists("example_output"):
+        os.mkdir("example_output")
 
     names = ("cc3",)
 
