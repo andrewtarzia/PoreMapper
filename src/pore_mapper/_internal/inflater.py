@@ -1,13 +1,3 @@
-"""
-Inflater
-========
-
-#. :class:`.Inflater`
-
-Generator of blob guests using nonbonded interactions and growth.
-
-"""
-
 from __future__ import annotations
 
 import typing
@@ -48,7 +38,7 @@ class Inflater:
         host: Host,
         blob: Blob,
         bead: Bead,
-    ) -> np.ndarray:
+    ) -> bool:
         coord = np.array([blob.get_position_matrix()[bead.get_id()]])
         host_coords = host.get_position_matrix()
         host_radii = np.array(
@@ -101,7 +91,7 @@ class Inflater:
         num_steps = 100
 
         # Move host to origin.
-        host = host.with_centroid([0.0, 0.0, 0.0])
+        host = host.with_centroid(np.array([0.0, 0.0, 0.0]))
         host_pos_mat = host.get_position_matrix()
         host_maximum_diameter = host.get_maximum_diameter()
         host_radii_arr = np.array(

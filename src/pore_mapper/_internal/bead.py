@@ -1,14 +1,3 @@
-"""
-Bead
-====
-
-#. :class:`.Bead`
-
-Bead class.
-
-"""
-
-
 class Bead:
     """
     Bead.
@@ -46,10 +35,10 @@ class Bead:
         """
         return self._sigma
 
-    def __str__(self):
+    def __str__(self) -> str:
         return repr(self)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"<{self.__class__.__name__}(id={self._id}, "
             f"sigma={self._sigma}) "

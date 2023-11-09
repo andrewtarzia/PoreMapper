@@ -1,7 +1,9 @@
 """
 This module defines atom radii in Angstrom.
 
-The atom radii used are from Austin Mroz and their STREUSEL method. CITATION.
+The atom radii used are from Austin Mroz and their STREUSEL method.
+
+DOI: 10.1039/D2SC00780K
 
 """
 

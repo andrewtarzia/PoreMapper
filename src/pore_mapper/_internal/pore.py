@@ -1,13 +1,3 @@
-"""
-Pore
-====
-
-#. :class:`.Pore`
-
-Pore class for optimisation.
-
-"""
-
 from __future__ import annotations
 
 import json
@@ -82,7 +72,7 @@ class Pore:
         blob: Blob,
         num_beads: int,
         sigma: float,
-        beads: abc.Iterable[Bead],
+        beads: tuple[Bead, ...],
         position_matrix: np.ndarray,
     ) -> Pore:
         """
@@ -170,13 +160,13 @@ class Pore:
         for bead in self._beads:
             yield bead
 
-    def _write_xyz_content(self) -> str:
+    def _write_xyz_content(self) -> list[str]:
         """
         Write basic `.xyz` file content of Blob.
 
         """
         coords = self.get_position_matrix()
-        content = [0]
+        content = ["0"]
         for i, bead in enumerate(self.get_beads(), 1):
             x, y, z = (i for i in coords[bead.get_id()])
             content.append(f"B {x:f} {y:f} {z:f}\n")
@@ -185,7 +175,7 @@ class Pore:
 
         return content
 
-    def write_xyz_file(self, path) -> None:
+    def write_xyz_file(self, path: str) -> None:
         """
         Write blob to path.
 
@@ -253,8 +243,8 @@ class Pore:
     def get_properties(self) -> PoreProperties:
         return PoreProperties(
             num_beads=self._num_beads,
-            max_dist_to_com=self.get_max_dist_to_com(),
-            mean_dist_to_com=self.get_mean_dist_to_com(),
+            max_dist_to_com=self.get_maximum_distance_to_com(),
+            mean_dist_to_com=self.get_mean_distance_to_com(),
             volume=self.get_volume(),
             windows=self.get_windows(),
         )
@@ -295,14 +285,14 @@ class Pore:
         )
         return inertia_tensor
 
-    def get_asphericity(self):
+    def get_asphericity(self) -> float:
         S = get_tensor_eigenvalues(
             T=self.get_inertia_tensor(),
             sort=True,
         )
         return S[0] - (S[1] + S[2]) / 2
 
-    def get_relative_shape_anisotropy(self):
+    def get_relative_shape_anisotropy(self) -> float:
         S = get_tensor_eigenvalues(
             T=self.get_inertia_tensor(),
             sort=True,
@@ -311,17 +301,17 @@ class Pore:
             (S[0] * S[1] + S[0] * S[2] + S[1] * S[2]) / (np.sum(S)) ** 2
         )
 
-    def write_properties(self, path: str, potential: float) -> None:
+    def write_properties(self, path: str) -> None:
         """
         Write properties as json to path.
 
         """
 
         with open(path, "w") as f:
-            json.dump(asdict(self.get_properties(potential)), f)
+            json.dump(asdict(self.get_properties()), f)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return repr(self)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self._num_beads} beads)"

@@ -1,13 +1,3 @@
-"""
-Host
-====
-
-#. :class:`.Host`
-
-Host class for calculation.
-
-"""
-
 from __future__ import annotations
 
 import typing
@@ -51,7 +41,7 @@ class Host:
         )
 
     @classmethod
-    def init_from_xyz_file(cls, path) -> Host:
+    def init_from_xyz_file(cls, path: str) -> Host:
         """
         Initialize from a file.
 
@@ -207,13 +197,13 @@ class Host:
             self._position_matrix[:, atom_ids].sum(axis=1), len(atom_ids)
         )
 
-    def _write_xyz_content(self):
+    def _write_xyz_content(self) -> list[str]:
         """
         Write basic `.xyz` file content of Molecule.
 
         """
         coords = self.get_position_matrix()
-        content = [0]
+        content = ["0"]
         for i, atom in enumerate(self.get_atoms(), 1):
             x, y, z = (i for i in coords[atom.get_id()])
             content.append(f"{atom.get_element_string()} {x:f} {y:f} {z:f}\n")
@@ -222,7 +212,7 @@ class Host:
 
         return content
 
-    def write_xyz_file(self, path):
+    def write_xyz_file(self, path: str) -> None:
         """
         Write basic `.xyz` file of Molecule to `path`.
 
@@ -235,10 +225,10 @@ class Host:
         with open(path, "w") as f:
             f.write("".join(content))
 
-    def __str__(self):
+    def __str__(self) -> str:
         return repr(self)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"<{self.__class__.__name__}({len(self._atoms)} atoms) "
             f"at {id(self)}>"

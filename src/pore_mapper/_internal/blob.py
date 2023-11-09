@@ -1,13 +1,3 @@
-"""
-Blob
-====
-
-#. :class:`.Blob`
-
-Blob class for optimisation.
-
-"""
-
 from __future__ import annotations
 
 import json
@@ -206,7 +196,7 @@ class Blob:
         displacement = position - centroid
         return self.with_displacement(displacement)
 
-    def get_movable_bead_ids(self):
+    def get_movable_bead_ids(self) -> tuple[int, ...]:
         return self._movable_bead_ids
 
     def with_movable_bead_ids(
@@ -251,13 +241,13 @@ class Blob:
         )
         return clone
 
-    def _write_xyz_content(self) -> str:
+    def _write_xyz_content(self) -> list[str]:
         """
         Write basic `.xyz` file content of Blob.
 
         """
         coords = self.get_position_matrix()
-        content = [0]
+        content = ["0"]
         for i, bead in enumerate(self.get_beads(), 1):
             x, y, z = (i for i in coords[bead.get_id()])
             movable = 1 if bead.get_id() in self._movable_bead_ids else 0
@@ -267,7 +257,7 @@ class Blob:
 
         return content
 
-    def write_xyz_file(self, path) -> None:
+    def write_xyz_file(self, path: str) -> None:
         """
         Write blob to path.
 
@@ -328,17 +318,17 @@ class Blob:
 
         return windows
 
-    def write_properties(self, path: str, potential: float) -> None:
+    def write_properties(self, path: str) -> None:
         """
         Write properties as json to path.
 
         """
 
         with open(path, "w") as f:
-            json.dump(asdict(self.get_properties(potential)), f)
+            json.dump(asdict(self.get_properties()), f)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return repr(self)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self._num_beads} beads)"

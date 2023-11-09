@@ -30,6 +30,7 @@ dev = [
   "sphinx-copybutton",
   "sphinx-rtd-theme",
   "twine",
+  "matplotlib",
 ]
 
 [project.urls]
@@ -92,6 +93,6 @@ module = [
   "stk.*",
   "networkx.*",
   "openbabel.*",
-  "MDAnalysis.*",
+  "sklearn.*",
 ]
 ignore_missing_imports = true
