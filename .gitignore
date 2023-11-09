@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 # Examples output.
-examples/min_example_output/
+examples/example_output/
 
 .vscode
 /dist

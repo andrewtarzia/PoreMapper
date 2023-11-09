@@ -31,6 +31,7 @@ dev = [
   "sphinx-rtd-theme",
   "twine",
   "matplotlib",
+  "stk",
 ]
 
 [project.urls]
