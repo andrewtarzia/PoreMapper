@@ -1,12 +1,3 @@
-"""
-Result
-======
-
-#. :class:`.InflationResult`
-#. :class:`.InflationStepResult`
-
-"""
-
 from dataclasses import dataclass
 
 from .blob import Blob

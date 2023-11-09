@@ -1,0 +1,99 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "PoreMapper"
+maintainers = [
+  { name = "Andrew Tarzia", email = "andrew.tarzia@gmail.com" },
+]
+dependencies = [
+  "numpy",
+  "scipy",
+  "scikit-learn",
+]
+requires-python = ">=3.6"
+dynamic = ["version"]
+readme = "README.rst"
+
+[project.optional-dependencies]
+dev = [
+  "black",
+  "ruff",
+  "mypy",
+  "pip-tools",
+  "pytest",
+  "pytest-datadir",
+  "pytest-lazy-fixture",
+  "pytest-cov",
+  "sphinx",
+  "sphinx-copybutton",
+  "sphinx-rtd-theme",
+  "twine",
+  "matplotlib",
+  "stk",
+]
+
+[project.urls]
+github = "https://github.com/andrewtarzia/PoreMapper"
+
+[tool.setuptools_scm]
+write_to = "src/pore_mapper/_version.py"
+
+[tool.setuptools.packages.find]
+where = [
+  # list of folders that contain the packages (["."] by default)
+  "src",
+]
+
+[tool.black]
+line-length = 79
+
+[tool.ruff]
+line-length = 79
+extend-select = ["I"]
+
+[tool.pytest.ini_options]
+testpaths = [
+  "tests",
+]
+python_files = [
+    "test_*.py",
+    "*_test.py",
+]
+python_functions = [
+  "test_*",
+]
+
+[tool.mypy]
+show_error_codes = true
+implicit_optional = false
+warn_no_return = true
+strict_optional = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+warn_unreachable = true
+disallow_any_generics = false
+
+[[tool.mypy.overrides]]
+module = [
+  "rdkit.*",
+  "scipy.*",
+  "pytest_lazyfixture.*",
+  "pathos.*",
+  "matplotlib.*",
+  "pandas.*",
+  "seaborn.*",
+  "mchammer.*",
+  "spindry.*",
+  "pymongo.*",
+  "vabene.*",
+  "setuptools.*",
+  "stk.*",
+  "networkx.*",
+  "openbabel.*",
+  "sklearn.*",
+]
+ignore_missing_imports = true
