@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-import typing
 from collections import abc
-from copy import deepcopy
 
 import numpy as np
 from scipy.spatial.distance import cdist
 
-from .bead import Bead
 from .blob import Blob
 from .host import Host
 from .pore import Pore
@@ -20,7 +17,11 @@ class Inflater:
 
     """
 
-    def __init__(self, bead_sigma: float):
+    def __init__(
+        self,
+        bead_sigma: float,
+        centroid: np.ndarray,
+    ):
         """
         Initialize a :class:`Inflater` instance.
 
@@ -29,45 +30,13 @@ class Inflater:
             bead_sigma:
                 Bead sigma to use in Blob.
 
+            centroid:
+                Position to Inflate Blob at.
+
         """
 
         self._bead_sigma = bead_sigma
-
-    def _check_steric(
-        self,
-        host: Host,
-        blob: Blob,
-        bead: Bead,
-    ) -> bool:
-        coord = np.array([blob.get_position_matrix()[bead.get_id()]])
-        host_coords = host.get_position_matrix()
-        host_radii = np.array(
-            [i.get_radii() for i in host.get_atoms()]
-        ).reshape(host.get_num_atoms(), 1)
-        host_bead_distances = cdist(host_coords, coord)
-        host_bead_distances += -host_radii
-        min_host_guest_distance = np.min(host_bead_distances.flatten())
-        if min_host_guest_distance < bead.get_sigma():
-            return True
-        return False
-
-    def _translate_beads_along_vector(
-        self,
-        blob: Blob,
-        vector: np.ndarray,
-        bead_id: typing.Optional[int] = None,
-    ) -> Blob:
-        if bead_id is None:
-            return blob.with_displacement(vector)
-        else:
-            new_position_matrix = deepcopy(blob.get_position_matrix())
-            for bead in blob.get_beads():
-                if bead.get_id() != bead_id:
-                    continue
-                pos = blob.get_position_matrix()[bead.get_id()]
-                new_position_matrix[bead.get_id()] = pos - vector
-
-            return blob.with_position_matrix(new_position_matrix)
+        self._centroid = centroid
 
     def inflate_blob(
         self,
@@ -90,8 +59,6 @@ class Inflater:
         starting_radius = 0.1
         num_steps = 100
 
-        # Move host to origin.
-        host = host.with_centroid(np.array([0.0, 0.0, 0.0]))
         host_pos_mat = host.get_position_matrix()
         host_maximum_diameter = host.get_maximum_diameter()
         host_radii_arr = np.array(
@@ -111,7 +78,7 @@ class Inflater:
             num_beads=num_beads,
             sphere_radius=starting_radius,
         )
-        blob = blob.with_centroid(host.get_centroid())
+        blob = blob.with_centroid(self._centroid)
 
         blob_maximum_diameter = blob.get_maximum_diameter()
         movable_bead_ids = set([i.get_id() for i in blob.get_beads()])
@@ -120,15 +87,8 @@ class Inflater:
             # Stop.
             blob_maximum_diameter = blob.get_maximum_diameter()
             if blob_maximum_diameter > host_maximum_diameter:
-                print(
-                    f"Pop! breaking at step: {step} with blob larger "
-                    "than host"
-                )
                 break
             if len(movable_bead_ids) == 0:
-                print(
-                    f"breaking at step: {step} with no more moveable " "beads"
-                )
                 break
 
             pos_mat = blob.get_position_matrix()
@@ -147,23 +107,24 @@ class Inflater:
             # And ids.
             movable_bead_ids = set(np.argwhere(movable_bead_arr == 1)[:, 0])
             # Update blob.
-            blob = blob.with_movable_bead_ids(
-                movable_bead_ids=movable_bead_ids,
-            )
+            blob = blob.with_movable_bead_ids(movable_bead_ids)
 
             # Define step array based on collisions.
             step_arr = movable_bead_arr * step_size
+
             # Get translations.
+            # This is how far to move the position matrix, based on how
+            # far each point is from the centroid of the blob.
             translation_mat = step_arr * (
-                pos_mat
+                (pos_mat - self._centroid)
                 / np.linalg.norm(
-                    x=pos_mat,
+                    x=pos_mat - self._centroid,
                     axis=1,
                 ).reshape(num_beads, 1)
             )
-            new_pos_mat = pos_mat + translation_mat
 
             # Do move.
+            new_pos_mat = pos_mat + translation_mat
             blob = blob.with_position_matrix(new_pos_mat)
 
             num_movable_beads = len(movable_bead_ids)

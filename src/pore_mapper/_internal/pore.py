@@ -225,6 +225,8 @@ class Pore:
         This method does not account for the van der Waals radius of
         atoms.
 
+        Warning: This measure is not reliable!!!
+
         """
 
         if self.get_num_beads() < 4:
